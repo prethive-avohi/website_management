@@ -1,0 +1,79 @@
+{
+  "actions": [],
+  "creation": "2026-03-16 00:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "section_type",
+    "heading",
+    "subheading",
+    "body",
+    "cta_label",
+    "cta_url",
+    "order",
+    "background",
+    "items_json"
+  ],
+  "fields": [
+    {
+      "fieldname": "section_type",
+      "fieldtype": "Select",
+      "label": "Section Type",
+      "options": "Trust Strip\nAudience Cards\nFeature Cards\nService Models\nProcess Steps\nTestimonials\nCTA Banner\nRich Text\nScholarship List\nFAQ"
+    },
+    {
+      "fieldname": "heading",
+      "fieldtype": "Data",
+      "label": "Heading"
+    },
+    {
+      "fieldname": "subheading",
+      "fieldtype": "Small Text",
+      "label": "Subheading"
+    },
+    {
+      "fieldname": "body",
+      "fieldtype": "Text Editor",
+      "label": "Body"
+    },
+    {
+      "fieldname": "cta_label",
+      "fieldtype": "Data",
+      "label": "CTA Label"
+    },
+    {
+      "fieldname": "cta_url",
+      "fieldtype": "Data",
+      "label": "CTA URL"
+    },
+    {
+      "fieldname": "order",
+      "fieldtype": "Int",
+      "label": "Order"
+    },
+    {
+      "fieldname": "background",
+      "fieldtype": "Select",
+      "label": "Background",
+      "options": "White\nGrey\nDark\nAccent"
+    },
+    {
+      "fieldname": "items_json",
+      "fieldtype": "Code",
+      "label": "Items JSON",
+      "options": "JSON"
+    }
+  ],
+  "istable": 1,
+  "links": [],
+  "modified": "2026-03-16 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "Paideia CMS",
+  "name": "Paideia Page Section",
+  "naming_rule": "Random",
+  "owner": "Administrator",
+  "permissions": [],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": []
+}

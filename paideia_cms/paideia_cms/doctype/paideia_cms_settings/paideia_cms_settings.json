@@ -1,0 +1,171 @@
+{
+  "actions": [],
+  "creation": "2026-03-16 00:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "issingle": 1,
+  "field_order": [
+    "sb_ai_provider",
+    "ai_provider",
+    "cb_provider",
+    "ollama_url",
+    "ollama_model",
+    "sb_huggingface",
+    "hf_api_token",
+    "hf_model",
+    "sb_groq",
+    "groq_api_key",
+    "groq_model",
+    "sb_openai",
+    "openai_api_key",
+    "openai_model",
+    "sb_claude",
+    "claude_api_key",
+    "claude_model",
+    "sb_setup",
+    "setup_status"
+  ],
+  "fields": [
+    {
+      "fieldname": "sb_ai_provider",
+      "fieldtype": "Section Break",
+      "label": "AI Provider"
+    },
+    {
+      "fieldname": "ai_provider",
+      "fieldtype": "Select",
+      "label": "AI Provider",
+      "options": "Ollama (Local)\nHuggingFace (Free API)\nGroq (Free API)\nOpenAI (ChatGPT)\nClaude (Anthropic)",
+      "default": "Ollama (Local)",
+      "reqd": 1,
+      "description": "Ollama = free local (self-hosted only). HuggingFace/Groq = free cloud APIs. OpenAI/Claude = paid, highest quality."
+    },
+    {
+      "fieldname": "cb_provider",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "ollama_url",
+      "fieldtype": "Data",
+      "label": "Ollama URL",
+      "default": "http://localhost:11434",
+      "depends_on": "eval:doc.ai_provider=='Ollama (Local)'"
+    },
+    {
+      "fieldname": "ollama_model",
+      "fieldtype": "Data",
+      "label": "Ollama Model",
+      "default": "mistral",
+      "depends_on": "eval:doc.ai_provider=='Ollama (Local)'",
+      "description": "e.g. mistral, phi3, llama3, gemma2"
+    },
+    {
+      "fieldname": "sb_huggingface",
+      "fieldtype": "Section Break",
+      "label": "HuggingFace Settings",
+      "depends_on": "eval:doc.ai_provider=='HuggingFace (Free API)'"
+    },
+    {
+      "fieldname": "hf_api_token",
+      "fieldtype": "Password",
+      "label": "HuggingFace API Token",
+      "description": "Free at huggingface.co/settings/tokens"
+    },
+    {
+      "fieldname": "hf_model",
+      "fieldtype": "Data",
+      "label": "HuggingFace Model",
+      "default": "mistralai/Mistral-7B-Instruct-v0.3",
+      "description": "Any text-generation model on HuggingFace Inference API"
+    },
+    {
+      "fieldname": "sb_groq",
+      "fieldtype": "Section Break",
+      "label": "Groq Settings",
+      "depends_on": "eval:doc.ai_provider=='Groq (Free API)'"
+    },
+    {
+      "fieldname": "groq_api_key",
+      "fieldtype": "Password",
+      "label": "Groq API Key",
+      "description": "Free at console.groq.com/keys"
+    },
+    {
+      "fieldname": "groq_model",
+      "fieldtype": "Data",
+      "label": "Groq Model",
+      "default": "llama-3.1-8b-instant",
+      "description": "e.g. llama-3.1-8b-instant, mixtral-8x7b-32768, gemma2-9b-it"
+    },
+    {
+      "fieldname": "sb_openai",
+      "fieldtype": "Section Break",
+      "label": "OpenAI (ChatGPT) Settings",
+      "depends_on": "eval:doc.ai_provider=='OpenAI (ChatGPT)'"
+    },
+    {
+      "fieldname": "openai_api_key",
+      "fieldtype": "Password",
+      "label": "OpenAI API Key",
+      "description": "Get your API key at platform.openai.com/api-keys"
+    },
+    {
+      "fieldname": "openai_model",
+      "fieldtype": "Data",
+      "label": "OpenAI Model",
+      "default": "gpt-4o-mini",
+      "description": "e.g. gpt-4o-mini (cheap), gpt-4o (best), gpt-4.1-mini, gpt-4.1-nano (cheapest)"
+    },
+    {
+      "fieldname": "sb_claude",
+      "fieldtype": "Section Break",
+      "label": "Claude (Anthropic) Settings",
+      "depends_on": "eval:doc.ai_provider=='Claude (Anthropic)'"
+    },
+    {
+      "fieldname": "claude_api_key",
+      "fieldtype": "Password",
+      "label": "Anthropic API Key",
+      "description": "Get your API key at console.anthropic.com/settings/keys"
+    },
+    {
+      "fieldname": "claude_model",
+      "fieldtype": "Data",
+      "label": "Claude Model",
+      "default": "claude-sonnet-4-6",
+      "description": "e.g. claude-sonnet-4-6 (balanced), claude-haiku-4-5-20251001 (fast/cheap), claude-opus-4-6 (best)"
+    },
+    {
+      "fieldname": "sb_setup",
+      "fieldtype": "Section Break",
+      "label": "Setup Info",
+      "collapsible": 1
+    },
+    {
+      "fieldname": "setup_status",
+      "fieldtype": "Code",
+      "label": "Setup Status",
+      "read_only": 1,
+      "options": "Markdown"
+    }
+  ],
+  "links": [],
+  "modified": "2026-03-16 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "Paideia CMS",
+  "name": "Paideia CMS Settings",
+  "naming_rule": "Random",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "delete": 1,
+      "read": 1,
+      "role": "System Manager",
+      "write": 1
+    }
+  ],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": []
+}

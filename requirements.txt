@@ -1,0 +1,4 @@
+frappe
+PyPDF2
+python-docx
+requests

@@ -1,0 +1,64 @@
+{
+  "actions": [],
+  "creation": "2026-03-16 00:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "site_name",
+    "contact_email",
+    "contact_phone",
+    "address",
+    "linkedin_url"
+  ],
+  "fields": [
+    {
+      "fieldname": "site_name",
+      "fieldtype": "Data",
+      "label": "Site Name"
+    },
+    {
+      "fieldname": "contact_email",
+      "fieldtype": "Data",
+      "label": "Contact Email"
+    },
+    {
+      "fieldname": "contact_phone",
+      "fieldtype": "Data",
+      "label": "Contact Phone"
+    },
+    {
+      "fieldname": "address",
+      "fieldtype": "Small Text",
+      "label": "Address"
+    },
+    {
+      "fieldname": "linkedin_url",
+      "fieldtype": "Data",
+      "label": "LinkedIn URL"
+    }
+  ],
+  "issingle": 1,
+  "links": [],
+  "modified": "2026-03-16 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "Paideia CMS",
+  "name": "Paideia Site Config",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "System Manager",
+      "share": 1,
+      "write": 1
+    }
+  ],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": []
+}

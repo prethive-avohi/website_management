@@ -1,0 +1,76 @@
+{
+  "actions": [],
+  "autoname": "field:person_name",
+  "creation": "2026-03-16 00:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "quote",
+    "person_name",
+    "role",
+    "organisation",
+    "audience",
+    "status"
+  ],
+  "fields": [
+    {
+      "fieldname": "quote",
+      "fieldtype": "Text",
+      "label": "Quote",
+      "reqd": 1
+    },
+    {
+      "fieldname": "person_name",
+      "fieldtype": "Data",
+      "label": "Person Name",
+      "reqd": 1
+    },
+    {
+      "fieldname": "role",
+      "fieldtype": "Data",
+      "label": "Role"
+    },
+    {
+      "fieldname": "organisation",
+      "fieldtype": "Data",
+      "label": "Organisation"
+    },
+    {
+      "fieldname": "audience",
+      "fieldtype": "Select",
+      "label": "Audience",
+      "options": "All\nUniversities\nStudents\nConsultants"
+    },
+    {
+      "default": "Draft",
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "label": "Status",
+      "options": "Draft\nPublished"
+    }
+  ],
+  "links": [],
+  "modified": "2026-03-16 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "Paideia CMS",
+  "name": "Paideia Testimonial",
+  "naming_rule": "By fieldname",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "System Manager",
+      "share": 1,
+      "write": 1
+    }
+  ],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": []
+}
