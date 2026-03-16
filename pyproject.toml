@@ -1,0 +1,21 @@
+[project]
+name = "paideia_cms"
+version = "0.0.1"
+description = "Custom CMS for Paideia website"
+authors = [
+    { name = "Paideia", email = "info@paideia.com" }
+]
+requires-python = ">=3.10"
+dependencies = [
+    "frappe",
+    "PyPDF2",
+    "python-docx",
+    "requests",
+]
+
+[build-system]
+requires = ["flit_core >=3.4,<4"]
+build-backend = "flit_core.buildapi"
+
+[tool.bench.frappe-dependencies]
+frappe = ">=15.0.0"
