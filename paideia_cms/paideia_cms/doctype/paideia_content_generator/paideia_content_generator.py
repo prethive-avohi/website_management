@@ -1,13 +1,22 @@
+import re
 import frappe
 from frappe.model.document import Document
-from frappe.utils import slugify
+
+
+def _slugify(text):
+    """Convert text to a URL-friendly slug."""
+    text = text.lower().strip()
+    text = re.sub(r"[^\w\s-]", "", text)
+    text = re.sub(r"[\s_]+", "-", text)
+    text = re.sub(r"-+", "-", text)
+    return text.strip("-")
 
 
 class PaideiaContentGenerator(Document):
 
     def before_save(self):
         if not self.slug:
-            self.slug = slugify(self.title)
+            self.slug = _slugify(self.title)
 
     @frappe.whitelist()
     def generate_page(self):
