@@ -9,8 +9,9 @@ frappe.ui.form.on("Paideia Content Generator", {
                         "Provider configured in Paideia CMS Settings. Continue?"
                     ),
                     function () {
-                        frm.call({
-                            method: "generate_page",
+                        frappe.call({
+                            method: "paideia_cms.paideia_cms.doctype.paideia_content_generator.paideia_content_generator.generate_page",
+                            args: { docname: frm.doc.name },
                             freeze: true,
                             freeze_message: __("Extracting content and generating page... This may take a minute."),
                             callback: function (r) {
@@ -44,7 +45,7 @@ frappe.ui.form.on("Paideia Content Generator", {
         }, __("Settings"));
 
         // Status indicator
-        const colors = {
+        var colors = {
             "Completed": "green",
             "Failed": "red",
             "Generating": "orange",
