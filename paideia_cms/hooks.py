@@ -7,7 +7,8 @@ app_license = "MIT"
 
 # DocType JS — path relative to the app package (paideia_cms/)
 doctype_js = {
-    "Paideia Content Generator": "paideia_cms/doctype/paideia_content_generator/paideia_content_generator.js"
+    "Paideia Content Generator": "paideia_cms/doctype/paideia_content_generator/paideia_content_generator.js",
+    "Paideia Bulk Content Generator": "paideia_cms/doctype/paideia_bulk_content_generator/paideia_bulk_content_generator.js"
 }
 
 # Installing

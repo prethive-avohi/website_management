@@ -1,0 +1,91 @@
+{
+  "actions": [],
+  "creation": "2026-03-18 00:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "istable": 1,
+  "field_order": [
+    "file_title",
+    "source_file",
+    "page_type_override",
+    "slug",
+    "cb_item",
+    "item_status",
+    "generated_page",
+    "error_message"
+  ],
+  "fields": [
+    {
+      "fieldname": "file_title",
+      "fieldtype": "Data",
+      "label": "Title",
+      "reqd": 1,
+      "in_list_view": 1,
+      "columns": 2,
+      "description": "Title for the generated page. Auto-filled from filename if left blank."
+    },
+    {
+      "fieldname": "source_file",
+      "fieldtype": "Attach",
+      "label": "File (PDF / Word)",
+      "reqd": 1,
+      "in_list_view": 1,
+      "columns": 3
+    },
+    {
+      "fieldname": "page_type_override",
+      "fieldtype": "Select",
+      "label": "Page Type Override",
+      "options": "\nLanding Page\nBlog Post\nWeb Page",
+      "description": "Leave blank to use the batch default",
+      "in_list_view": 1,
+      "columns": 1
+    },
+    {
+      "fieldname": "slug",
+      "fieldtype": "Data",
+      "label": "Slug",
+      "description": "URL path (auto-generated from title if blank)"
+    },
+    {
+      "fieldname": "cb_item",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "item_status",
+      "fieldtype": "Select",
+      "label": "Status",
+      "options": "Pending\nProcessing\nCompleted\nFailed",
+      "default": "Pending",
+      "read_only": 1,
+      "in_list_view": 1,
+      "columns": 1
+    },
+    {
+      "fieldname": "generated_page",
+      "fieldtype": "Link",
+      "label": "Generated Page",
+      "options": "Paideia Web Page",
+      "read_only": 1,
+      "in_list_view": 1,
+      "columns": 2
+    },
+    {
+      "fieldname": "error_message",
+      "fieldtype": "Small Text",
+      "label": "Error",
+      "read_only": 1
+    }
+  ],
+  "links": [],
+  "modified": "2026-03-18 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "Paideia CMS",
+  "name": "Paideia Bulk Upload Item",
+  "naming_rule": "Random",
+  "owner": "Administrator",
+  "permissions": [],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": []
+}

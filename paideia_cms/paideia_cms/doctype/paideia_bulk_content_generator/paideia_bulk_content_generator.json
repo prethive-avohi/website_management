@@ -1,0 +1,145 @@
+{
+  "actions": [],
+  "autoname": "format:BULK-{####}",
+  "creation": "2026-03-18 00:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "sb_settings",
+    "batch_title",
+    "page_type",
+    "cb_settings",
+    "audience",
+    "sb_files",
+    "files",
+    "sb_progress",
+    "status",
+    "total_files",
+    "cb_progress",
+    "processed",
+    "failed",
+    "sb_log",
+    "processing_log"
+  ],
+  "fields": [
+    {
+      "fieldname": "sb_settings",
+      "fieldtype": "Section Break",
+      "label": "Batch Settings"
+    },
+    {
+      "fieldname": "batch_title",
+      "fieldtype": "Data",
+      "label": "Batch Title",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "page_type",
+      "fieldtype": "Select",
+      "label": "Default Page Type",
+      "options": "Landing Page\nBlog Post\nWeb Page",
+      "default": "Web Page",
+      "reqd": 1,
+      "in_list_view": 1,
+      "description": "Applied to all files unless overridden in the child row"
+    },
+    {
+      "fieldname": "cb_settings",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "audience",
+      "fieldtype": "Select",
+      "label": "Default Audience",
+      "options": "All\nUniversities\nStudents\nConsultants",
+      "default": "All"
+    },
+    {
+      "fieldname": "sb_files",
+      "fieldtype": "Section Break",
+      "label": "Upload Files"
+    },
+    {
+      "fieldname": "files",
+      "fieldtype": "Table",
+      "label": "Files",
+      "options": "Paideia Bulk Upload Item",
+      "reqd": 1,
+      "description": "Upload multiple PDF or Word documents. Each file will generate a separate web page."
+    },
+    {
+      "fieldname": "sb_progress",
+      "fieldtype": "Section Break",
+      "label": "Progress"
+    },
+    {
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "label": "Status",
+      "options": "Draft\nProcessing\nCompleted\nPartially Failed",
+      "default": "Draft",
+      "in_list_view": 1,
+      "read_only": 1
+    },
+    {
+      "fieldname": "total_files",
+      "fieldtype": "Int",
+      "label": "Total Files",
+      "read_only": 1
+    },
+    {
+      "fieldname": "cb_progress",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "processed",
+      "fieldtype": "Int",
+      "label": "Processed",
+      "read_only": 1
+    },
+    {
+      "fieldname": "failed",
+      "fieldtype": "Int",
+      "label": "Failed",
+      "read_only": 1
+    },
+    {
+      "fieldname": "sb_log",
+      "fieldtype": "Section Break",
+      "label": "Processing Log",
+      "collapsible": 1
+    },
+    {
+      "fieldname": "processing_log",
+      "fieldtype": "Code",
+      "label": "Processing Log",
+      "read_only": 1,
+      "options": "Markdown"
+    }
+  ],
+  "links": [],
+  "modified": "2026-03-18 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "Paideia CMS",
+  "name": "Paideia Bulk Content Generator",
+  "naming_rule": "Expression (old style)",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "System Manager",
+      "share": 1,
+      "write": 1
+    }
+  ],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": []
+}
