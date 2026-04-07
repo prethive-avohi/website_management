@@ -1,6 +1,6 @@
 import re
 import frappe
-from frappe.model.document import Document
+from frappe import Document
 
 
 def _slugify(text):

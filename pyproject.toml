@@ -5,9 +5,9 @@ description = "Custom CMS for Paideia website"
 authors = [
     { name = "Paideia", email = "info@paideia.com" }
 ]
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 dependencies = [
-    "frappe",
+    "frappe~=16.0",
     "PyPDF2",
     "python-docx",
     "requests",
@@ -18,4 +18,4 @@ requires = ["flit_core >=3.4,<4"]
 build-backend = "flit_core.buildapi"
 
 [tool.bench.frappe-dependencies]
-frappe = ">=15.0.0"
+frappe = ">=16.0.0"

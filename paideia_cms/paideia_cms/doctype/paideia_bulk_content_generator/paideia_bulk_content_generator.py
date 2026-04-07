@@ -1,6 +1,6 @@
 import re
 import frappe
-from frappe.model.document import Document
+from frappe import Document
 
 
 def _slugify(text):
@@ -88,7 +88,7 @@ def generate_all(docname):
             log_lines.append(f"**{row.file_title}**: Failed — {str(e)[:200]}")
             frappe.log_error(
                 title=f"Bulk CG: {row.file_title}",
-                message=frappe.get_traceback()
+                message=frappe.get_traceback(with_context=True)
             )
 
         # Update progress after each file
