@@ -1,4 +1,4 @@
-from frappe import Document
+from frappe.model.document import Document
 
 
 class PaideiaBulkUploadItem(Document):

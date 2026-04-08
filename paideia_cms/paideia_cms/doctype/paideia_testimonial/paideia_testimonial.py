@@ -1,5 +1,5 @@
 import frappe
-from frappe import Document
+from frappe.model.document import Document
 
 
 class PaideiaTestimonial(Document):
