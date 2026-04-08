@@ -34,7 +34,8 @@ Return ONLY a valid JSON object (no markdown, no explanation) with this exact st
   ]
 }}
 
-Create 4-6 sections. For Feature Cards and Process Steps, include items_json with relevant items.
+Create enough sections to cover ALL the document content thoroughly. For short documents, use 4-6 sections. For longer documents, use as many sections as needed (up to 12-15) to capture all key information.
+For Feature Cards and Process Steps, include items_json with relevant items.
 Each item should have "title" and "description" fields.
 
 DOCUMENT TEXT:
@@ -64,7 +65,7 @@ Return ONLY a valid JSON object (no markdown, no explanation) with this exact st
   ]
 }}
 
-Break the content into 3-5 Rich Text sections with clear headings. Use proper HTML formatting.
+Break the content into as many Rich Text sections as needed to cover ALL the document content thoroughly. For short documents use 3-5 sections, for longer documents use more (up to 12-15). Use proper HTML formatting with paragraphs, lists, bold text, etc.
 End with a CTA Banner section if appropriate.
 
 DOCUMENT TEXT:
@@ -94,7 +95,7 @@ Return ONLY a valid JSON object (no markdown, no explanation) with this exact st
   ]
 }}
 
-Create 3-6 well-structured sections mixing Rich Text with Feature Cards or FAQ as appropriate.
+Create enough well-structured sections to cover ALL the document content. For short documents use 3-6 sections, for longer documents use more (up to 12-15). Mix Rich Text with Feature Cards or FAQ as appropriate.
 For Feature Cards, items_json should be: [{{"title":"..","description":".."}}, ...]
 For FAQ, items_json should be: [{{"question":"..","answer":".."}}, ...]
 
@@ -122,8 +123,16 @@ def generate_page_content(extracted_text, page_type):
     settings = get_ai_settings()
     provider = settings.ai_provider
 
-    # Truncate very long documents to stay within model context
-    max_chars = 8000
+    # Set context limit based on provider – modern LLMs handle large inputs
+    provider_limits = {
+        "Ollama (Local)": 12000,
+        "HuggingFace (Free API)": 12000,
+        "Groq (Free API)": 28000,
+        "OpenAI (ChatGPT)": 60000,
+        "Claude (Anthropic)": 80000,
+    }
+    max_chars = provider_limits.get(provider, 20000)
+
     if len(extracted_text) > max_chars:
         extracted_text = extracted_text[:max_chars] + "\n\n[... content truncated for processing ...]"
 
@@ -170,7 +179,7 @@ def _call_ollama(prompt, settings):
             "model": model,
             "prompt": prompt,
             "stream": False,
-            "options": {"temperature": 0.3, "num_predict": 4096},
+            "options": {"temperature": 0.3, "num_predict": 8192},
         },
         timeout=300,
     )
@@ -199,7 +208,7 @@ def _call_huggingface(prompt, settings):
         json={
             "inputs": prompt,
             "parameters": {
-                "max_new_tokens": 4096,
+                "max_new_tokens": 8192,
                 "temperature": 0.3,
                 "return_full_text": False,
             },
@@ -250,7 +259,7 @@ def _call_groq(prompt, settings):
                 {"role": "user", "content": prompt},
             ],
             "temperature": 0.3,
-            "max_tokens": 4096,
+            "max_tokens": 8192,
         },
         timeout=120,
     )
@@ -292,7 +301,7 @@ def _call_openai(prompt, settings):
                 {"role": "user", "content": prompt},
             ],
             "temperature": 0.3,
-            "max_tokens": 4096,
+            "max_tokens": 8192,
         },
         timeout=120,
     )
@@ -333,7 +342,7 @@ def _call_claude(prompt, settings):
         },
         json={
             "model": model,
-            "max_tokens": 4096,
+            "max_tokens": 8192,
             "system": "You are a web content generator. Return ONLY valid JSON, no markdown fences, no explanation.",
             "messages": [
                 {"role": "user", "content": prompt},
