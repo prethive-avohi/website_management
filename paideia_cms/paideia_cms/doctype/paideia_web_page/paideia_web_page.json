@@ -7,6 +7,7 @@
   "field_order": [
     "title",
     "slug",
+    "page_type",
     "audience",
     "status",
     "meta_title",
@@ -30,6 +31,13 @@
       "label": "Slug",
       "reqd": 1,
       "unique": 1
+    },
+    {
+      "default": "Web Page",
+      "fieldname": "page_type",
+      "fieldtype": "Select",
+      "label": "Page Type",
+      "options": "Landing Page\nBlog Post\nWeb Page"
     },
     {
       "fieldname": "audience",

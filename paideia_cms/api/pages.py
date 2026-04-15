@@ -18,6 +18,7 @@ def get_page(slug):
         "name": doc.name,
         "title": doc.title,
         "slug": doc.slug,
+        "page_type": doc.page_type or "Web Page",
         "audience": doc.audience,
         "meta_title": doc.meta_title,
         "meta_description": doc.meta_description,

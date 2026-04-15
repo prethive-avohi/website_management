@@ -74,6 +74,7 @@ def _create_web_page(doc, page_data):
     web_page = frappe.new_doc("Paideia Web Page")
     web_page.title = doc.title
     web_page.slug = slug
+    web_page.page_type = doc.page_type or "Web Page"
     web_page.audience = doc.audience or "All"
     web_page.status = "Draft"
     web_page.meta_title = page_data.get("meta_title", doc.title)

@@ -124,14 +124,15 @@ def generate_page_content(extracted_text, page_type):
     provider = settings.ai_provider
 
     # Set context limit based on provider – modern LLMs handle large inputs
+    # Increased limits so more document content is sent to the AI
     provider_limits = {
-        "Ollama (Local)": 12000,
+        "Ollama (Local)": 16000,
         "HuggingFace (Free API)": 12000,
-        "Groq (Free API)": 28000,
-        "OpenAI (ChatGPT)": 60000,
-        "Claude (Anthropic)": 80000,
+        "Groq (Free API)": 40000,
+        "OpenAI (ChatGPT)": 100000,
+        "Claude (Anthropic)": 150000,
     }
-    max_chars = provider_limits.get(provider, 20000)
+    max_chars = provider_limits.get(provider, 30000)
 
     if len(extracted_text) > max_chars:
         extracted_text = extracted_text[:max_chars] + "\n\n[... content truncated for processing ...]"
@@ -179,7 +180,7 @@ def _call_ollama(prompt, settings):
             "model": model,
             "prompt": prompt,
             "stream": False,
-            "options": {"temperature": 0.3, "num_predict": 8192},
+            "options": {"temperature": 0.3, "num_predict": 32768},
         },
         timeout=300,
     )
@@ -208,12 +209,12 @@ def _call_huggingface(prompt, settings):
         json={
             "inputs": prompt,
             "parameters": {
-                "max_new_tokens": 8192,
+                "max_new_tokens": 16384,
                 "temperature": 0.3,
                 "return_full_text": False,
             },
         },
-        timeout=120,
+        timeout=180,
     )
 
     if response.status_code == 503:
@@ -244,7 +245,9 @@ def _call_groq(prompt, settings):
             "Get a free key at console.groq.com/keys and add it in Paideia CMS Settings."
         )
 
-    model = settings.groq_model or "llama-3.1-8b-instant"
+    # llama-3.3-70b-versatile supports up to 32768 output tokens
+    # llama-3.1-8b-instant is capped at 8192 output tokens (too low for full pages)
+    model = settings.groq_model or "llama-3.3-70b-versatile"
 
     response = requests.post(
         "https://api.groq.com/openai/v1/chat/completions",
@@ -259,9 +262,9 @@ def _call_groq(prompt, settings):
                 {"role": "user", "content": prompt},
             ],
             "temperature": 0.3,
-            "max_tokens": 8192,
+            "max_tokens": 32768,
         },
-        timeout=120,
+        timeout=180,
     )
 
     if response.status_code != 200:
@@ -301,9 +304,10 @@ def _call_openai(prompt, settings):
                 {"role": "user", "content": prompt},
             ],
             "temperature": 0.3,
-            "max_tokens": 8192,
+            "max_tokens": 16384,
+            "response_format": {"type": "json_object"},
         },
-        timeout=120,
+        timeout=180,
     )
 
     if response.status_code == 401:
@@ -342,14 +346,14 @@ def _call_claude(prompt, settings):
         },
         json={
             "model": model,
-            "max_tokens": 8192,
+            "max_tokens": 32000,
             "system": "You are a web content generator. Return ONLY valid JSON, no markdown fences, no explanation.",
             "messages": [
                 {"role": "user", "content": prompt},
             ],
             "temperature": 0.3,
         },
-        timeout=120,
+        timeout=300,
     )
 
     if response.status_code == 401:
