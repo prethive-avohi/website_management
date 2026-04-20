@@ -21,19 +21,33 @@ class PaideiaContentGenerator(Document):
 
 @frappe.whitelist()
 def generate_page(docname):
-    """Extract text from document -> send to SLM -> store generated content as JSON."""
+    """Enqueue background generation job and return immediately."""
+    doc = frappe.get_doc("Paideia Content Generator", docname)
+
+    doc.status = "Extracting"
+    doc.error_log = ""
+    doc.save(ignore_permissions=True)
+    frappe.db.commit()
+
+    frappe.enqueue(
+        "paideia_cms.paideia_cms.doctype.paideia_content_generator.paideia_content_generator._run_generation",
+        docname=docname,
+        queue="long",
+        timeout=600,
+        now=False,
+    )
+
+    return {"status": "queued", "docname": docname}
+
+
+def _run_generation(docname):
+    """Background worker: extract text -> AI -> store JSON."""
     doc = frappe.get_doc("Paideia Content Generator", docname)
 
     try:
-        doc.status = "Extracting"
-        doc.error_log = ""
-        doc.save(ignore_permissions=True)
-        frappe.db.commit()
-
         from paideia_cms.utils.document_extractor import extract_text_from_file
         extracted = extract_text_from_file(doc.source_file)
         doc.extracted_text = extracted
-
         doc.status = "Generating"
         doc.save(ignore_permissions=True)
         frappe.db.commit()
@@ -46,18 +60,23 @@ def generate_page(docname):
         doc.save(ignore_permissions=True)
         frappe.db.commit()
 
-        return {
-            "status": "success",
-            "docname": doc.name,
-            "slug": doc.slug,
-        }
-
     except Exception as e:
+        frappe.log_error(frappe.get_traceback(), f"Paideia Content Generator: {docname}")
         doc.status = "Failed"
         doc.error_log = str(e)
         doc.save(ignore_permissions=True)
         frappe.db.commit()
-        frappe.throw(str(e))
+
+
+@frappe.whitelist()
+def reset_status(docname):
+    """Reset a stuck Extracting/Generating record back to Pending."""
+    doc = frappe.get_doc("Paideia Content Generator", docname)
+    doc.status = "Pending"
+    doc.error_log = ""
+    doc.save(ignore_permissions=True)
+    frappe.db.commit()
+    return {"status": "reset"}
 
 
 @frappe.whitelist(allow_guest=True)
