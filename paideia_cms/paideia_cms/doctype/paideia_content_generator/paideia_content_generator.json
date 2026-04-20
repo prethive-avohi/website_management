@@ -78,10 +78,9 @@
     },
     {
       "fieldname": "extracted_text",
-      "fieldtype": "Code",
+      "fieldtype": "Long Text",
       "label": "Extracted Text",
-      "read_only": 1,
-      "options": "Markdown"
+      "read_only": 1
     },
     {
       "fieldname": "sb_generated",
@@ -91,10 +90,9 @@
     },
     {
       "fieldname": "generated_content",
-      "fieldtype": "Code",
+      "fieldtype": "Long Text",
       "label": "Generated Content (JSON)",
-      "read_only": 1,
-      "options": "JSON"
+      "read_only": 1
     },
     {
       "fieldname": "sb_error",

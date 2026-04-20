@@ -3,105 +3,42 @@ import frappe
 import requests
 
 
-SECTION_TYPES = [
+BLOCK_TYPES = [
     "Trust Strip", "Audience Cards", "Feature Cards", "Service Models",
     "Process Steps", "Testimonials", "CTA Banner", "Rich Text",
     "Scholarship List", "FAQ"
 ]
 
-PROMPT_TEMPLATES = {
-    "Landing Page": """You are a web content strategist. Analyze the following document text and create a structured landing page.
+CONTENT_PROMPT = """You are a content extraction specialist. Read the document below and extract ALL its content into a series of blocks.
 
-Return ONLY a valid JSON object (no markdown, no explanation) with this exact structure:
+Return ONLY a valid JSON object (no markdown, no explanation):
 {{
-  "meta_title": "SEO title (max 60 chars)",
-  "meta_description": "SEO description (max 160 chars)",
-  "hero_headline": "Main headline for the hero section",
-  "hero_subheadline": "Supporting text for the hero section",
-  "hero_cta_label": "Call to action button text",
-  "hero_cta_url": "#contact",
-  "sections": [
+  "title": "Main title of the document",
+  "blocks": [
     {{
-      "section_type": "one of: Rich Text, Feature Cards, Process Steps, CTA Banner, FAQ, Trust Strip",
-      "heading": "Section heading",
-      "subheading": "Optional subheading",
-      "body": "HTML content for Rich Text sections, empty for others",
-      "background": "one of: White, Grey, Dark, Accent",
-      "cta_label": "Optional CTA text",
-      "cta_url": "Optional CTA link",
-      "items_json": "JSON array string for card/list sections e.g. [{{\\"title\\":\\"..\\",\\"description\\":\\"..\\"}}, ...]"
+      "type": "one of: Rich Text | Feature Cards | Process Steps | FAQ | Testimonials | CTA Banner | Trust Strip | Audience Cards | Service Models | Scholarship List",
+      "heading": "Block heading (empty string if none)",
+      "subheading": "Optional supporting text (empty string if none)",
+      "body": "HTML body text for Rich Text blocks — use proper <p>, <ul>, <li>, <strong> tags. Empty string for other types.",
+      "cta_label": "Call-to-action button label (empty string if none)",
+      "cta_url": "Call-to-action URL (empty string if none)",
+      "items": []
     }}
   ]
 }}
 
-Create enough sections to cover ALL the document content thoroughly. For short documents, use 4-6 sections. For longer documents, use as many sections as needed (up to 12-15) to capture all key information.
-For Feature Cards and Process Steps, include items_json with relevant items.
-Each item should have "title" and "description" fields.
-
-DOCUMENT TEXT:
-{content}""",
-
-    "Blog Post": """You are a content writer. Analyze the following document text and create a structured blog post.
-
-Return ONLY a valid JSON object (no markdown, no explanation) with this exact structure:
-{{
-  "meta_title": "SEO title (max 60 chars)",
-  "meta_description": "SEO description (max 160 chars)",
-  "hero_headline": "Blog post title",
-  "hero_subheadline": "Brief summary of the post",
-  "hero_cta_label": "",
-  "hero_cta_url": "",
-  "sections": [
-    {{
-      "section_type": "Rich Text",
-      "heading": "Section heading or empty for intro",
-      "subheading": "",
-      "body": "<p>Well-formatted HTML content with proper paragraphs, lists, bold, etc.</p>",
-      "background": "White",
-      "cta_label": "",
-      "cta_url": "",
-      "items_json": ""
-    }}
-  ]
-}}
-
-Break the content into as many Rich Text sections as needed to cover ALL the document content thoroughly. For short documents use 3-5 sections, for longer documents use more (up to 12-15). Use proper HTML formatting with paragraphs, lists, bold text, etc.
-End with a CTA Banner section if appropriate.
-
-DOCUMENT TEXT:
-{content}""",
-
-    "Web Page": """You are a web content designer. Analyze the following document text and create a structured web page.
-
-Return ONLY a valid JSON object (no markdown, no explanation) with this exact structure:
-{{
-  "meta_title": "SEO title (max 60 chars)",
-  "meta_description": "SEO description (max 160 chars)",
-  "hero_headline": "Main page headline",
-  "hero_subheadline": "Supporting text",
-  "hero_cta_label": "Optional CTA text",
-  "hero_cta_url": "#contact",
-  "sections": [
-    {{
-      "section_type": "one of: Rich Text, Feature Cards, Process Steps, CTA Banner, FAQ, Trust Strip",
-      "heading": "Section heading",
-      "subheading": "Optional subheading",
-      "body": "HTML content for Rich Text sections",
-      "background": "one of: White, Grey, Dark, Accent",
-      "cta_label": "Optional CTA",
-      "cta_url": "Optional URL",
-      "items_json": "JSON array string for structured sections"
-    }}
-  ]
-}}
-
-Create enough well-structured sections to cover ALL the document content. For short documents use 3-6 sections, for longer documents use more (up to 12-15). Mix Rich Text with Feature Cards or FAQ as appropriate.
-For Feature Cards, items_json should be: [{{"title":"..","description":".."}}, ...]
-For FAQ, items_json should be: [{{"question":"..","answer":".."}}, ...]
+Rules:
+- items is a JSON array used for card/list/step/faq blocks. For Rich Text leave it as an empty array [].
+- Feature Cards / Service Models / Audience Cards / Trust Strip / Testimonials items: [{{"title":"..","description":"..","icon":""}}]
+- Process Steps items: [{{"step": 1, "title":"..","description":".."}}]
+- FAQ items: [{{"question":"..","answer":".."}}]
+- Scholarship List items: [{{"name":"..","amount":"..","eligibility":".."}}]
+- CTA Banner has no items; use heading, body and cta_label/cta_url fields.
+- Cover ALL content from the document — do not skip anything.
+- Use as many blocks as needed (4–15) based on document length.
 
 DOCUMENT TEXT:
 {content}"""
-}
 
 
 def get_ai_settings():
@@ -110,35 +47,20 @@ def get_ai_settings():
     return settings
 
 
-def generate_page_content(extracted_text, page_type):
+def generate_page_content(extracted_text, page_type=None):
     """Route to the correct AI provider based on settings.
 
     Args:
         extracted_text: The text extracted from the document
-        page_type: One of "Landing Page", "Blog Post", "Web Page"
+        page_type: Unused — kept for call-site compatibility
 
     Returns:
-        Parsed JSON dict with page structure
+        Parsed JSON dict with title and blocks list
     """
     settings = get_ai_settings()
     provider = settings.ai_provider
 
-    # Set context limit based on provider – modern LLMs handle large inputs
-    # Increased limits so more document content is sent to the AI
-    provider_limits = {
-        "Ollama (Local)": 16000,
-        "HuggingFace (Free API)": 12000,
-        "Groq (Free API)": 40000,
-        "OpenAI (ChatGPT)": 100000,
-        "Claude (Anthropic)": 150000,
-    }
-    max_chars = provider_limits.get(provider, 30000)
-
-    if len(extracted_text) > max_chars:
-        extracted_text = extracted_text[:max_chars] + "\n\n[... content truncated for processing ...]"
-
-    prompt = PROMPT_TEMPLATES.get(page_type, PROMPT_TEMPLATES["Web Page"])
-    prompt = prompt.format(content=extracted_text)
+    prompt = CONTENT_PROMPT.format(content=extracted_text)
 
     if provider == "Ollama (Local)":
         raw = _call_ollama(prompt, settings)
@@ -383,7 +305,6 @@ def parse_llm_response(raw_response):
     """Parse the JSON response from the LLM, handling common formatting issues."""
     text = raw_response.strip()
 
-    # Strip markdown code fences if present
     if text.startswith("```"):
         lines = text.split("\n")
         lines = lines[1:]
@@ -391,7 +312,6 @@ def parse_llm_response(raw_response):
             lines = lines[:-1]
         text = "\n".join(lines)
 
-    # Find JSON object boundaries
     start = text.find("{")
     end = text.rfind("}")
     if start != -1 and end != -1:
@@ -404,21 +324,19 @@ def parse_llm_response(raw_response):
             f"Failed to parse LLM response as JSON: {str(e)}\n\nRaw response:\n{raw_response[:1000]}"
         )
 
-    # Validate required fields
-    for field in ["meta_title", "hero_headline", "sections"]:
-        if field not in data:
-            frappe.throw(f"LLM response missing required field: {field}")
+    if "blocks" not in data or not isinstance(data["blocks"], list) or len(data["blocks"]) == 0:
+        frappe.throw("LLM response missing 'blocks' array")
 
-    if not isinstance(data["sections"], list) or len(data["sections"]) == 0:
-        frappe.throw("LLM response has no sections")
+    valid_types = set(BLOCK_TYPES)
+    for i, block in enumerate(data["blocks"]):
+        if block.get("type") not in valid_types:
+            data["blocks"][i]["type"] = "Rich Text"
 
-    valid_types = set(SECTION_TYPES)
-    for i, section in enumerate(data["sections"]):
-        if section.get("section_type") not in valid_types:
-            data["sections"][i]["section_type"] = "Rich Text"
-
-        items = section.get("items_json")
-        if items and not isinstance(items, str):
-            data["sections"][i]["items_json"] = json.dumps(items)
+        items = block.get("items")
+        if items is not None and not isinstance(items, list):
+            try:
+                data["blocks"][i]["items"] = json.loads(items)
+            except (ValueError, TypeError):
+                data["blocks"][i]["items"] = []
 
     return data

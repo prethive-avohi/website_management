@@ -73,5 +73,6 @@ def get_content(docname):
         "slug": doc.slug,
         "page_type": doc.page_type,
         "audience": doc.audience,
+        "extracted_text": doc.extracted_text or "",
         "content": json.loads(doc.generated_content),
     }
