@@ -12,9 +12,10 @@
     "slug",
     "sb_generation",
     "status",
-    "generated_page",
     "sb_extracted",
     "extracted_text",
+    "sb_generated",
+    "generated_content",
     "sb_error",
     "error_log"
   ],
@@ -70,13 +71,6 @@
       "read_only": 1
     },
     {
-      "fieldname": "generated_page",
-      "fieldtype": "Link",
-      "label": "Generated Page",
-      "options": "Paideia Web Page",
-      "read_only": 1
-    },
-    {
       "fieldname": "sb_extracted",
       "fieldtype": "Section Break",
       "label": "Extracted Content",
@@ -88,6 +82,19 @@
       "label": "Extracted Text",
       "read_only": 1,
       "options": "Markdown"
+    },
+    {
+      "fieldname": "sb_generated",
+      "fieldtype": "Section Break",
+      "label": "Generated Content",
+      "collapsible": 1
+    },
+    {
+      "fieldname": "generated_content",
+      "fieldtype": "Code",
+      "label": "Generated Content (JSON)",
+      "read_only": 1,
+      "options": "JSON"
     },
     {
       "fieldname": "sb_error",
