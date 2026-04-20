@@ -80,9 +80,12 @@ def reset_status(docname):
 
 
 @frappe.whitelist(allow_guest=True)
-def get_content(docname):
-    """Return the generated content JSON for a completed generator record."""
-    doc = frappe.get_doc("Paideia Content Generator", docname)
+def get_content(slug):
+    """Return the generated content JSON for a completed generator record by slug."""
+    name = frappe.db.get_value("Paideia Content Generator", {"slug": slug}, "name")
+    if not name:
+        frappe.throw(f"No record found for slug: {slug}", frappe.DoesNotExistError)
+    doc = frappe.get_doc("Paideia Content Generator", name)
     if doc.status != "Completed" or not doc.generated_content:
         frappe.throw("Content not yet generated", frappe.DoesNotExistError)
 
