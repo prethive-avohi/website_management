@@ -197,7 +197,7 @@ def _call_groq(prompt, settings):
 
 
 def _call_openai(prompt, settings):
-    """Call OpenAI ChatGPT API.
+    """Call OpenAI ChatGPT API using streaming to avoid read timeouts on large responses.
 
     Models: gpt-4o-mini (cheap), gpt-4o (best), gpt-4.1-mini, gpt-4.1-nano (cheapest)
     """
@@ -228,8 +228,11 @@ def _call_openai(prompt, settings):
             "temperature": 0.3,
             "max_tokens": 16384,
             "response_format": {"type": "json_object"},
+            "stream": True,
         },
-        timeout=180,
+        # connect timeout 30s, read timeout 60s per chunk (streaming keeps connection alive)
+        timeout=(30, 60),
+        stream=True,
     )
 
     if response.status_code == 401:
@@ -241,8 +244,24 @@ def _call_openai(prompt, settings):
     if response.status_code != 200:
         frappe.throw(f"OpenAI API error ({response.status_code}): {response.text[:500]}")
 
-    result = response.json()
-    return result["choices"][0]["message"]["content"]
+    chunks = []
+    for line in response.iter_lines():
+        if not line:
+            continue
+        line = line.decode("utf-8") if isinstance(line, bytes) else line
+        if line.startswith("data: "):
+            data = line[6:]
+            if data == "[DONE]":
+                break
+            try:
+                event = json.loads(data)
+                delta = event["choices"][0]["delta"]
+                if "content" in delta and delta["content"]:
+                    chunks.append(delta["content"])
+            except (json.JSONDecodeError, KeyError, IndexError):
+                continue
+
+    return "".join(chunks)
 
 
 def _call_claude(prompt, settings):
