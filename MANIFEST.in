@@ -1,0 +1,2 @@
+recursive-include pdcms_app *.json *.txt
+recursive-include public *
