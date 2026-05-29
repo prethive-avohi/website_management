@@ -1,0 +1,70 @@
+{
+  "actions": [],
+  "autoname": "format:TRANS-{####}",
+  "creation": "2026-01-01 00:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "reference_doctype",
+    "reference_name",
+    "language",
+    "status",
+    "cb1",
+    "translated_by",
+    "translated_at",
+    "provider",
+    "sb_content",
+    "translated_json",
+    "sb_meta",
+    "translation_job"
+  ],
+  "fields": [
+    {"fieldname": "reference_doctype", "fieldtype": "Link", "label": "Reference DocType", "options": "DocType", "reqd": 1, "in_list_view": 1},
+    {"fieldname": "reference_name", "fieldtype": "Dynamic Link", "label": "Reference Name", "options": "reference_doctype", "reqd": 1, "in_list_view": 1},
+    {
+      "fieldname": "language",
+      "fieldtype": "Data",
+      "label": "Language Code",
+      "reqd": 1,
+      "in_list_view": 1,
+      "description": "ISO 639-1, e.g. ar, fr, de"
+    },
+    {
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "label": "Status",
+      "options": "Pending\nQueued\nCompleted\nFailed",
+      "default": "Pending",
+      "in_list_view": 1
+    },
+    {"fieldname": "cb1", "fieldtype": "Column Break"},
+    {"fieldname": "translated_by", "fieldtype": "Data", "label": "Translated By (Provider)"},
+    {"fieldname": "translated_at", "fieldtype": "Datetime", "label": "Translated At", "read_only": 1},
+    {"fieldname": "provider", "fieldtype": "Data", "label": "Translation Provider"},
+    {"fieldname": "sb_content", "fieldtype": "Section Break", "label": "Translated Content"},
+    {
+      "fieldname": "translated_json",
+      "fieldtype": "Long Text",
+      "label": "Translated Content (JSON)",
+      "description": "Mirrors the source content_json structure but in target language"
+    },
+    {"fieldname": "sb_meta", "fieldtype": "Section Break", "label": "Meta"},
+    {"fieldname": "translation_job", "fieldtype": "Link", "label": "Translation Job", "options": "AI Job Log", "read_only": 1}
+  ],
+  "links": [],
+  "modified": "2026-01-01 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "PDCMS",
+  "name": "CMS Translation",
+  "naming_rule": "Expression",
+  "owner": "Administrator",
+  "permissions": [
+    {"create": 1, "delete": 1, "read": 1, "write": 1, "report": 1, "role": "CMS Admin"},
+    {"read": 1, "write": 1, "role": "Content Editor"},
+    {"read": 1, "role": "CMS Reviewer"},
+    {"read": 1, "role": "CMS Publisher"}
+  ],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": []
+}

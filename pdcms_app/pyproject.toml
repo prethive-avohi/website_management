@@ -1,0 +1,11 @@
+[build-system]
+requires = ["flit_core >=3.4,<4"]
+build-backend = "flit_core.buildapi"
+
+[project]
+name = "pdcms_app"
+version = "1.0.0"
+description = "AI-powered multilingual headless CMS on Frappe"
+requires-python = ">=3.12"
+readme = "README.md"
+license = { text = "MIT" }

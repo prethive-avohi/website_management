@@ -1,0 +1,84 @@
+{
+  "actions": [],
+  "autoname": "format:AIJOB-{####}",
+  "creation": "2026-01-01 00:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "reference_doctype",
+    "reference_name",
+    "job_type",
+    "status",
+    "cb1",
+    "ai_provider",
+    "template",
+    "language",
+    "sb_timing",
+    "started_at",
+    "completed_at",
+    "duration_seconds",
+    "retry_count",
+    "sb_payload",
+    "prompt_snapshot",
+    "raw_response",
+    "error_trace"
+  ],
+  "fields": [
+    {"fieldname": "reference_doctype", "fieldtype": "Link", "label": "Reference DocType", "options": "DocType", "in_list_view": 1},
+    {"fieldname": "reference_name", "fieldtype": "Dynamic Link", "label": "Reference Name", "options": "reference_doctype", "in_list_view": 1},
+    {
+      "fieldname": "job_type",
+      "fieldtype": "Select",
+      "label": "Job Type",
+      "options": "Extract\nGenerate\nTranslate\nBulk",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "label": "Status",
+      "options": "Queued\nRunning\nCompleted\nFailed\nRetrying",
+      "default": "Queued",
+      "in_list_view": 1
+    },
+    {"fieldname": "cb1", "fieldtype": "Column Break"},
+    {"fieldname": "ai_provider", "fieldtype": "Data", "label": "AI Provider"},
+    {"fieldname": "template", "fieldtype": "Link", "label": "Template", "options": "CMS Template"},
+    {"fieldname": "language", "fieldtype": "Data", "label": "Language", "description": "ISO 639-1 code, e.g. en"},
+    {"fieldname": "sb_timing", "fieldtype": "Section Break", "label": "Timing"},
+    {"fieldname": "started_at", "fieldtype": "Datetime", "label": "Started At"},
+    {"fieldname": "completed_at", "fieldtype": "Datetime", "label": "Completed At"},
+    {"fieldname": "duration_seconds", "fieldtype": "Float", "label": "Duration (s)"},
+    {"fieldname": "retry_count", "fieldtype": "Int", "label": "Retry Count", "default": 0},
+    {"fieldname": "sb_payload", "fieldtype": "Section Break", "label": "Payload", "collapsible": 1},
+    {"fieldname": "prompt_snapshot", "fieldtype": "Long Text", "label": "Prompt Snapshot"},
+    {"fieldname": "raw_response", "fieldtype": "Long Text", "label": "Raw AI Response"},
+    {
+      "fieldname": "error_trace",
+      "fieldtype": "Code",
+      "label": "Error Trace",
+      "depends_on": "eval:doc.status=='Failed'"
+    }
+  ],
+  "links": [],
+  "modified": "2026-01-01 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "PDCMS",
+  "name": "AI Job Log",
+  "naming_rule": "Expression",
+  "owner": "Administrator",
+  "permissions": [
+    {"create": 1, "delete": 1, "read": 1, "write": 1, "report": 1, "role": "CMS Admin"},
+    {"read": 1, "role": "Content Editor"},
+    {"read": 1, "role": "CMS Reviewer"}
+  ],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": [
+    {"color": "Blue", "title": "Queued"},
+    {"color": "Orange", "title": "Running"},
+    {"color": "Green", "title": "Completed"},
+    {"color": "Red", "title": "Failed"},
+    {"color": "Yellow", "title": "Retrying"}
+  ]
+}

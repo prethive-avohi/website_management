@@ -1,0 +1,58 @@
+{
+  "actions": [],
+  "autoname": "format:MEDIA-{####}",
+  "creation": "2026-01-01 00:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "title",
+    "media_type",
+    "file_url",
+    "cdn_url",
+    "alt_text",
+    "cb1",
+    "file_size",
+    "mime_type",
+    "width",
+    "height",
+    "tags",
+    "uploaded_by"
+  ],
+  "fields": [
+    {"fieldname": "title", "fieldtype": "Data", "label": "Title", "reqd": 1, "in_list_view": 1},
+    {
+      "fieldname": "media_type",
+      "fieldtype": "Select",
+      "label": "Media Type",
+      "options": "Image\nDocument\nVideo\nOther",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {"fieldname": "file_url", "fieldtype": "Attach", "label": "File", "reqd": 1},
+    {"fieldname": "cdn_url", "fieldtype": "Data", "label": "CDN URL", "description": "Override with CDN-served URL"},
+    {"fieldname": "alt_text", "fieldtype": "Data", "label": "Alt Text"},
+    {"fieldname": "cb1", "fieldtype": "Column Break"},
+    {"fieldname": "file_size", "fieldtype": "Int", "label": "File Size (bytes)", "read_only": 1},
+    {"fieldname": "mime_type", "fieldtype": "Data", "label": "MIME Type", "read_only": 1},
+    {"fieldname": "width", "fieldtype": "Int", "label": "Width (px)"},
+    {"fieldname": "height", "fieldtype": "Int", "label": "Height (px)"},
+    {"fieldname": "tags", "fieldtype": "Data", "label": "Tags", "description": "Comma-separated"},
+    {"fieldname": "uploaded_by", "fieldtype": "Link", "label": "Uploaded By", "options": "User", "read_only": 1}
+  ],
+  "links": [],
+  "modified": "2026-01-01 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "PDCMS",
+  "name": "CMS Media",
+  "naming_rule": "Expression",
+  "owner": "Administrator",
+  "permissions": [
+    {"create": 1, "delete": 1, "read": 1, "write": 1, "report": 1, "role": "CMS Admin"},
+    {"create": 1, "read": 1, "write": 1, "role": "Content Editor"},
+    {"read": 1, "role": "CMS Reviewer"},
+    {"read": 1, "role": "CMS Publisher"}
+  ],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": []
+}

@@ -1,0 +1,86 @@
+{
+  "actions": [],
+  "creation": "2026-01-01 00:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "issingle": 1,
+  "field_order": [
+    "sb_ai",
+    "ai_provider",
+    "cb_ai",
+    "ollama_url",
+    "ollama_model",
+    "groq_model",
+    "groq_api_key",
+    "openai_model",
+    "openai_api_key",
+    "hf_model",
+    "hf_api_token",
+    "claude_model",
+    "claude_api_key",
+    "sb_translation",
+    "translation_provider",
+    "translation_api_url",
+    "translation_api_key",
+    "sb_api",
+    "api_cache_ttl",
+    "api_rate_limit"
+  ],
+  "fields": [
+    {"fieldname": "sb_ai", "fieldtype": "Section Break", "label": "AI Provider"},
+    {
+      "fieldname": "ai_provider",
+      "fieldtype": "Select",
+      "label": "AI Provider",
+      "options": "Ollama\nGroq\nOpenAI\nHuggingFace\nClaude",
+      "default": "Ollama",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {"fieldname": "cb_ai", "fieldtype": "Column Break"},
+    {"fieldname": "ollama_url", "fieldtype": "Data", "label": "Ollama URL", "default": "http://localhost:11434"},
+    {"fieldname": "ollama_model", "fieldtype": "Data", "label": "Ollama Model", "default": "mistral"},
+    {"fieldname": "groq_model", "fieldtype": "Data", "label": "Groq Model", "default": "llama-3.3-70b-versatile"},
+    {"fieldname": "groq_api_key", "fieldtype": "Password", "label": "Groq API Key"},
+    {"fieldname": "openai_model", "fieldtype": "Data", "label": "OpenAI Model", "default": "gpt-4o-mini"},
+    {"fieldname": "openai_api_key", "fieldtype": "Password", "label": "OpenAI API Key"},
+    {"fieldname": "hf_model", "fieldtype": "Data", "label": "HuggingFace Model", "default": "mistralai/Mistral-7B-Instruct-v0.3"},
+    {"fieldname": "hf_api_token", "fieldtype": "Password", "label": "HuggingFace API Token"},
+    {"fieldname": "claude_model", "fieldtype": "Data", "label": "Claude Model", "default": "claude-sonnet-4-6"},
+    {"fieldname": "claude_api_key", "fieldtype": "Password", "label": "Claude API Key"},
+    {"fieldname": "sb_translation", "fieldtype": "Section Break", "label": "Translation"},
+    {
+      "fieldname": "translation_provider",
+      "fieldtype": "Select",
+      "label": "Translation Provider",
+      "options": "None\nCustom API\nDeepL\nGoogle Translate",
+      "default": "None"
+    },
+    {"fieldname": "translation_api_url", "fieldtype": "Data", "label": "Translation API URL"},
+    {"fieldname": "translation_api_key", "fieldtype": "Password", "label": "Translation API Key"},
+    {"fieldname": "sb_api", "fieldtype": "Section Break", "label": "API Settings"},
+    {"fieldname": "api_cache_ttl", "fieldtype": "Int", "label": "API Cache TTL (seconds)", "default": 300},
+    {"fieldname": "api_rate_limit", "fieldtype": "Int", "label": "Rate Limit (req/min per IP)", "default": 60}
+  ],
+  "links": [],
+  "modified": "2026-01-01 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "PDCMS",
+  "name": "CMS Settings",
+  "naming_rule": "Expression",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1, "delete": 1, "email": 1, "export": 1,
+      "print": 1, "read": 1, "report": 1,
+      "role": "CMS Admin", "share": 1, "write": 1
+    },
+    {
+      "read": 1, "role": "System Manager",
+      "write": 1, "create": 1, "delete": 1
+    }
+  ],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": []
+}

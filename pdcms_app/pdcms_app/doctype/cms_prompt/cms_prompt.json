@@ -1,0 +1,126 @@
+{
+  "actions": [],
+  "autoname": "format:PROMPT-{####}",
+  "creation": "2026-01-01 00:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "prompt_key",
+    "template",
+    "section_type",
+    "sort_order",
+    "is_active",
+    "version",
+    "cb1",
+    "description",
+    "sb_prompt",
+    "prompt_text",
+    "sb_schema",
+    "output_schema",
+    "sb_meta",
+    "system_message",
+    "temperature",
+    "max_tokens"
+  ],
+  "fields": [
+    {
+      "fieldname": "prompt_key",
+      "fieldtype": "Data",
+      "label": "Prompt Key",
+      "reqd": 1,
+      "description": "e.g. hero_generator, faq_generator, seo_generator",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "template",
+      "fieldtype": "Link",
+      "label": "Template",
+      "options": "CMS Template",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "section_type",
+      "fieldtype": "Select",
+      "label": "Section Type",
+      "options": "hero\nsections\nseo\nfaq\ncta\ncustom",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "sort_order",
+      "fieldtype": "Int",
+      "label": "Sort Order",
+      "default": 10
+    },
+    {
+      "fieldname": "is_active",
+      "fieldtype": "Check",
+      "label": "Active",
+      "default": 1
+    },
+    {
+      "fieldname": "version",
+      "fieldtype": "Data",
+      "label": "Version",
+      "default": "1.0"
+    },
+    {"fieldname": "cb1", "fieldtype": "Column Break"},
+    {
+      "fieldname": "description",
+      "fieldtype": "Small Text",
+      "label": "Description"
+    },
+    {"fieldname": "sb_prompt", "fieldtype": "Section Break", "label": "Prompt"},
+    {
+      "fieldname": "prompt_text",
+      "fieldtype": "Long Text",
+      "label": "Prompt Text",
+      "reqd": 1,
+      "description": "Use {content} as placeholder for extracted document text. Use {schema} for the section schema."
+    },
+    {"fieldname": "sb_schema", "fieldtype": "Section Break", "label": "Output Schema"},
+    {
+      "fieldname": "output_schema",
+      "fieldtype": "Code",
+      "label": "Output JSON Schema",
+      "options": "JSON",
+      "description": "JSON Schema for validating only this section's output"
+    },
+    {"fieldname": "sb_meta", "fieldtype": "Section Break", "label": "AI Parameters"},
+    {
+      "fieldname": "system_message",
+      "fieldtype": "Small Text",
+      "label": "System Message Override",
+      "description": "Leave blank to use global default"
+    },
+    {
+      "fieldname": "temperature",
+      "fieldtype": "Float",
+      "label": "Temperature",
+      "default": 0.3
+    },
+    {
+      "fieldname": "max_tokens",
+      "fieldtype": "Int",
+      "label": "Max Tokens",
+      "default": 8192
+    }
+  ],
+  "links": [],
+  "modified": "2026-01-01 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "PDCMS",
+  "name": "CMS Prompt",
+  "naming_rule": "Expression",
+  "owner": "Administrator",
+  "permissions": [
+    {"create": 1, "delete": 1, "read": 1, "report": 1, "role": "CMS Admin", "write": 1},
+    {"read": 1, "write": 1, "role": "Content Editor"},
+    {"read": 1, "role": "CMS Reviewer"},
+    {"read": 1, "role": "CMS Publisher"}
+  ],
+  "sort_field": "sort_order",
+  "sort_order": "ASC",
+  "states": []
+}

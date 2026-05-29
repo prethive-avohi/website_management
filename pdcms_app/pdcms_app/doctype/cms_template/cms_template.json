@@ -1,0 +1,131 @@
+{
+  "actions": [],
+  "autoname": "field:template_name",
+  "creation": "2026-01-01 00:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "template_name",
+    "template_type",
+    "astro_component",
+    "version",
+    "status",
+    "cb1",
+    "description",
+    "sb_schema",
+    "json_schema",
+    "sb_seo",
+    "seo_mapping",
+    "sb_api",
+    "api_slug_prefix",
+    "supported_languages",
+    "sb_meta",
+    "created_by_role",
+    "is_default"
+  ],
+  "fields": [
+    {
+      "fieldname": "template_name",
+      "fieldtype": "Data",
+      "label": "Template Name",
+      "reqd": 1,
+      "unique": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "template_type",
+      "fieldtype": "Select",
+      "label": "Template Type",
+      "options": "Landing Page\nBlog\nCourse\nCustom",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "astro_component",
+      "fieldtype": "Data",
+      "label": "Astro Component Reference",
+      "description": "e.g. LandingPageA, BlogTemplateB",
+      "reqd": 1
+    },
+    {
+      "fieldname": "version",
+      "fieldtype": "Data",
+      "label": "Version",
+      "default": "1.0.0"
+    },
+    {
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "label": "Status",
+      "options": "Active\nDeprecated\nDraft",
+      "default": "Draft",
+      "in_list_view": 1
+    },
+    {"fieldname": "cb1", "fieldtype": "Column Break"},
+    {
+      "fieldname": "description",
+      "fieldtype": "Small Text",
+      "label": "Description"
+    },
+    {"fieldname": "sb_schema", "fieldtype": "Section Break", "label": "JSON Schema"},
+    {
+      "fieldname": "json_schema",
+      "fieldtype": "Code",
+      "label": "Expected JSON Schema",
+      "options": "JSON",
+      "description": "Canonical JSON Schema (draft-07) that all generated content must validate against"
+    },
+    {"fieldname": "sb_seo", "fieldtype": "Section Break", "label": "SEO Mapping"},
+    {
+      "fieldname": "seo_mapping",
+      "fieldtype": "Code",
+      "label": "SEO Field Mapping (JSON)",
+      "options": "JSON"
+    },
+    {"fieldname": "sb_api", "fieldtype": "Section Break", "label": "API"},
+    {
+      "fieldname": "api_slug_prefix",
+      "fieldtype": "Data",
+      "label": "API Slug Prefix",
+      "description": "e.g. pages, blogs, courses"
+    },
+    {
+      "fieldname": "supported_languages",
+      "fieldtype": "Small Text",
+      "label": "Supported Languages",
+      "description": "Comma-separated ISO codes, e.g. en,ar,fr"
+    },
+    {"fieldname": "sb_meta", "fieldtype": "Section Break", "label": "Meta"},
+    {
+      "fieldname": "created_by_role",
+      "fieldtype": "Link",
+      "label": "Managed By Role",
+      "options": "Role"
+    },
+    {
+      "fieldname": "is_default",
+      "fieldtype": "Check",
+      "label": "Default Template"
+    }
+  ],
+  "links": [],
+  "modified": "2026-01-01 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "PDCMS",
+  "name": "CMS Template",
+  "naming_rule": "By fieldname",
+  "owner": "Administrator",
+  "permissions": [
+    {"create": 1, "delete": 1, "read": 1, "report": 1, "role": "CMS Admin", "write": 1},
+    {"read": 1, "role": "Content Editor"},
+    {"read": 1, "role": "CMS Reviewer"},
+    {"read": 1, "role": "CMS Publisher", "write": 1}
+  ],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": [
+    {"color": "Yellow", "title": "Draft"},
+    {"color": "Green", "title": "Active"},
+    {"color": "Gray", "title": "Deprecated"}
+  ]
+}
