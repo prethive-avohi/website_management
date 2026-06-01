@@ -1,0 +1,159 @@
+---
+interface MetaItem { label: string; value: string; }
+interface LeftCard {
+  label: string;
+  name_label: string;
+  name: string;
+  heading: string;
+  body: string;
+  meta: MetaItem[];
+}
+interface RightCard {
+  heading: string;
+  body_parts: string[];
+  cta_text: string;
+  cta_url: string;
+}
+interface Props {
+  eyebrow: string;
+  left_card: LeftCard;
+  right_card: RightCard;
+}
+const { eyebrow, left_card: lc, right_card: rc } = Astro.props;
+---
+
+<section class="phil">
+  <div class="phil__inner">
+    <div class="phil__left">
+      <p class="pill">{lc.label}</p>
+      <p class="phil__greek">{lc.name_label}</p>
+      <p class="phil__name"><em>{lc.name}</em></p>
+      <h2 class="phil__heading">{lc.heading}</h2>
+      <p class="phil__body">{lc.body}</p>
+      <div class="phil__meta">
+        {lc.meta.map((m) => (
+          <div class="phil__meta-item">
+            <span class="phil__meta-label">{m.label}</span>
+            <span class="phil__meta-value">{m.value}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+    <div class="phil__right">
+      <p class="phil__eyebrow">{eyebrow}</p>
+      <h2 class="phil__right-heading">{rc.heading}</h2>
+      {rc.body_parts.map((para) => (
+        <p class="phil__para">{para}</p>
+      ))}
+      <a class="phil__cta" href={rc.cta_url}>{rc.cta_text} →</a>
+    </div>
+  </div>
+</section>
+
+<style>
+.phil {
+  background: var(--grey-50);
+  padding: 80px 24px;
+}
+.phil__inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1.4fr;
+  gap: 48px;
+  align-items: start;
+}
+.pill {
+  display: inline-block;
+  background: var(--navy);
+  color: var(--white);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+}
+.phil__greek {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--grey-600);
+  margin-bottom: 6px;
+}
+.phil__name {
+  font-size: 1.1rem;
+  color: var(--navy);
+  margin-bottom: 12px;
+  font-style: italic;
+}
+.phil__heading {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--navy);
+  line-height: 1.2;
+  margin-bottom: 16px;
+}
+.phil__body {
+  font-size: 0.9rem;
+  color: var(--grey-600);
+  line-height: 1.7;
+  margin-bottom: 28px;
+}
+.phil__meta {
+  display: flex;
+  gap: 32px;
+}
+.phil__meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.phil__meta-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--grey-600);
+  font-weight: 600;
+}
+.phil__meta-value {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--navy);
+}
+.phil__eyebrow {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--grey-600);
+  margin-bottom: 16px;
+}
+.phil__right-heading {
+  font-size: clamp(1.6rem, 3vw, 2.2rem);
+  font-weight: 800;
+  color: var(--navy);
+  line-height: 1.2;
+  margin-bottom: 24px;
+}
+.phil__para {
+  font-size: 0.92rem;
+  color: var(--grey-600);
+  line-height: 1.75;
+  margin-bottom: 16px;
+}
+.phil__cta {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--navy);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.phil__cta:hover { color: var(--gold); }
+
+@media (max-width: 768px) {
+  .phil__inner { grid-template-columns: 1fr; }
+}
+</style>

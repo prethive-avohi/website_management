@@ -1,52 +1,75 @@
 # PDCMS App
 
-AI-powered multilingual headless CMS built on Frappe. Content is created and managed in Frappe, AI generates structured JSON from uploaded documents, and Astro consumes the JSON via REST API to render the frontend.
+AI-powered template-driven headless CMS built on Frappe. Two distinct roles drive the system — a Template Administrator who builds reusable templates, and a CMS User who generates website content from those templates using AI.
 
 ---
 
-## Architecture Overview
+## Two-Role Architecture
 
 ```
-Content Editor (Frappe Desk)
-        │
-        ▼
-Upload source file (PDF/DOCX) on CMS Page / Blog / Course
-        │
-        ▼
-AI Job auto-queued (frappe.enqueue)
-        │
-        ▼
-ai_generation.py runs in background:
+ROLE 1: Template Administrator          ROLE 2: CMS User
+────────────────────────────            ────────────────────────────
+Creates and manages templates           Creates website pages/blogs/courses
+Defines JSON schema                     Selects a template
+Writes AI prompt                        Uploads content document
+Uploads Astro/HTML template file        Generates JSON via AI
+Publishes template                      Reviews and edits content
+                                        Previews rendered page
+                                        Publishes live
+```
+
+---
+
+## Full System Flow
+
+```
+ADMINISTRATOR SIDE
+──────────────────
+Figma Design
+    ↓ (convert externally — v0, AI, manual)
+HTML / Astro Template File
+    ↓
+CMS Template record:
+  - Upload template file (.html / .astro)
+  - Define JSON schema (what AI must fill)
+  - Write AI prompt (or use default)
+  - Set preview image
+  - Click "Publish Template" → status: Active
+    ↓
+
+CMS USER SIDE
+─────────────
+Create CMS Page / Blog / Course
+    ↓
+Select Template (from Active templates)
+    ↓
+Upload source document (PDF or DOCX)
+    ↓
+Click "Generate Content"
+    ↓
+AI pipeline runs in background:
   1. Extract text from PDF/DOCX
-  2. Load schema from CMS Template (or use hardcoded default)
-  3. Load prompt from CMS Prompt (or use hardcoded default)
+  2. Load schema from CMS Template
+  3. Load prompt from CMS Template (or CMS Prompt → hardcoded default)
   4. Call AI provider (Groq / OpenAI / Claude / Ollama)
   5. Parse JSON response
-  6. Save content_json back to doc
-        │
-        ▼
+  6. Save content_json to doc
+    ↓
 generation_status → Completed (or Failed — check AI Job Log)
-        │
-        ▼
-Content Editor moves workflow: Draft → Review → Approved → Published
-        │
-        ▼
-Astro frontend fetches content_json via Frappe REST API
-        │
-        ▼
+    ↓
+Review content_json in Frappe desk (edit if needed)
+    ↓
+Click "Preview" → rendered HTML opens in new tab
+  (Template file + content_json injected via {{dot.path}} placeholders)
+    ↓
+Edit → Preview → Edit → Preview (unlimited iterations)
+    ↓
+Workflow: Draft → Review → Approved → Published
+    ↓
+Astro frontend fetches published content_json via REST API
+    ↓
 API Cache serves repeated requests (TTL from CMS Settings)
 ```
-
----
-
-## Roles
-
-| Role | Can Do |
-|---|---|
-| CMS Admin | Full access to everything |
-| Content Editor | Create and edit content |
-| CMS Reviewer | Review and approve content |
-| CMS Publisher | Publish approved content |
 
 ---
 
@@ -60,60 +83,89 @@ API Cache serves repeated requests (TTL from CMS Settings)
 | `page_permissions.py` | Done | Role-based access on all CMS doctypes |
 | `ai_generation.py` | Done | Full pipeline — extract, prompt, AI call, save |
 | `ai_job_cleanup.py` | Done | Daily purge of AI Job Log records older than 30 days |
+| All AI providers | Done | Groq, OpenAI, Claude, Ollama, HuggingFace |
+| Preview engine | Done | `{{dot.path}}` injection into template files |
+| Preview API | Done | Opens rendered HTML in browser tab |
+| Template API | Done | Serves active templates for picker |
+| Form JS buttons | Done | Preview, Generate, Translate on all content forms |
+| CMS Template Admin UI | Done | Publish, Deprecate, Validate Schema, Test Preview |
 | `cache_cleanup.py` | Partial | Hourly job exists, eviction logic needs improvement |
 | `api_cache.py` | Stub | Persistence only — no read/write serving logic yet |
-| `public/js/` form files | Missing | 4 JS files referenced in hooks.py don't exist yet |
-| Translation provider | Not built | CMS Translation doctype exists, AI job not wired |
+| Translation job | Partial | CMS Translation doctype exists, provider wiring incomplete |
+| Astro frontend | Not built | Required to render published content |
 
 ---
 
-## Step-by-Step Setup & Usage
+## Roles
 
-### Step 1 — CMS Settings *(one-time, Admin only)*
+| Role | Can Do |
+|---|---|
+| CMS Admin | Full access — manages templates, settings, all content |
+| Content Editor | Create and edit CMS Page / Blog / Course |
+| CMS Reviewer | Review and approve content |
+| CMS Publisher | Publish approved content, write on templates |
+
+---
+
+## Step-by-Step: Template Administrator
+
+### Step 1 — CMS Settings *(one-time)*
 
 `Frappe Desk → Search → CMS Settings`
 
 | Field | What to do |
 |---|---|
 | AI Provider | Choose `Groq` (cloud) or `Ollama` (local) |
-| Groq API Key | Paste your Groq API key |
-| Groq Model | Default: `llama-3.3-70b-versatile` (leave as-is) |
-| OpenAI API Key | Paste if using OpenAI |
-| OpenAI Model | Default: `gpt-4o-mini` |
-| Claude API Key | Paste if using Claude |
-| Claude Model | Default: `claude-sonnet-4-6` |
-| Translation Provider | Set to `None` unless multilingual is needed |
+| Groq API Key | Paste your key |
+| Groq Model | Default: `llama-3.3-70b-versatile` |
+| OpenAI / Claude API Key | Paste if using those providers |
 | API Cache TTL | Default `300` seconds |
-| Rate Limit | Default `60` req/min per IP |
 
-> AI generation will not work until provider + API key is saved here.
+> AI generation will not work until provider + key is saved here.
 
 ---
 
-### Step 2 — CMS Template *(one-time per content type)*
+### Step 2 — CMS Template → New
 
 `Frappe Desk → Search → CMS Template → New`
 
-Defines the **structure** AI must output for each content type.
-Every CMS Page, Blog, and Course must link to a template.
-
-> **Skip this step to test quickly** — `ai_generation.py` has hardcoded default schemas
-> and prompts for Landing Page, Blog, and Course. You can create content without a template first.
-
-| Field | What to enter | Example |
+| Field | What to enter | Notes |
 |---|---|---|
-| Template Name | Unique name | `Prethive Landing Page` |
-| Template Type | Landing Page / Blog / Course / Custom | `Landing Page` |
-| Astro Component Reference | Astro component name that renders this | `LandingPageA` |
-| Version | Keep as `1.0.0` | `1.0.0` |
-| Status | Set `Active` when ready | `Active` |
-| Description | What this template is for | `Main landing page layout` |
-| Expected JSON Schema | JSON Schema AI must match | *(see below)* |
-| SEO Mapping | Maps content_json fields to meta tags | *(see below)* |
-| API Slug Prefix | URL prefix Astro uses | `pages` |
-| Supported Languages | Comma-separated ISO codes | `en,ta,hi` |
+| Template Name | Unique name | e.g. `Prethive Landing Page` |
+| Template Type | Landing Page / Blog / Course / Custom | |
+| Astro Component Reference | Astro component name | e.g. `LandingPageA` |
+| Status | Leave as `Draft` until ready | |
+| Description | What this template is for | |
+| Preview Image | Upload a thumbnail | Shown in template picker |
 
-**Landing Page JSON Schema example:**
+---
+
+### Step 3 — Upload Template File
+
+In the **Template File** section:
+
+- Convert your Figma design to HTML externally (v0, Cursor, AI, manual)
+- Add `{{dot.path}}` placeholders where content should appear
+- Upload the `.html` or `.astro` file
+
+**Placeholder syntax:**
+```html
+<h1>{{hero.headline}}</h1>
+<p>{{hero.subheadline}}</p>
+<a href="{{hero.cta_url}}">{{hero.cta_text}}</a>
+
+<!-- Array item -->
+<h3>{{features.0.title}}</h3>
+<p>{{features.0.description}}</p>
+```
+
+---
+
+### Step 4 — Define JSON Schema
+
+In the **JSON Schema** section, paste the schema that matches your template placeholders:
+
+**Landing Page example:**
 ```json
 {
   "type": "object",
@@ -133,24 +185,8 @@ Every CMS Page, Blog, and Course must link to a template.
         "type": "object",
         "properties": {
           "title":       { "type": "string" },
-          "description": { "type": "string" },
-          "icon":        { "type": "string" }
+          "description": { "type": "string" }
         }
-      }
-    },
-    "about": {
-      "type": "object",
-      "properties": {
-        "heading": { "type": "string" },
-        "body":    { "type": "string" }
-      }
-    },
-    "cta_section": {
-      "type": "object",
-      "properties": {
-        "heading":      { "type": "string" },
-        "button_label": { "type": "string" },
-        "button_url":   { "type": "string" }
       }
     },
     "seo": {
@@ -164,219 +200,219 @@ Every CMS Page, Blog, and Course must link to a template.
 }
 ```
 
-**Blog JSON Schema example:**
-```json
-{
-  "type": "object",
-  "properties": {
-    "intro":    { "type": "string" },
-    "sections": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "heading": { "type": "string" },
-          "body":    { "type": "string" }
-        }
-      }
-    },
-    "conclusion": { "type": "string" },
-    "tags": { "type": "array", "items": { "type": "string" } },
-    "seo": {
-      "type": "object",
-      "properties": {
-        "meta_title":       { "type": "string" },
-        "meta_description": { "type": "string" }
-      }
-    }
-  }
-}
-```
-
-**SEO Mapping example:**
-```json
-{
-  "meta_title": "seo.meta_title",
-  "meta_description": "seo.meta_description"
-}
-```
+Click **Validate Schema** button to verify.
 
 ---
 
-### Step 3 — CMS Prompt *(optional — hardcoded defaults exist)*
+### Step 5 — Configure AI Prompt
 
-`Frappe Desk → Search → CMS Prompt → New`
+In the **AI Prompt** section, a default prompt is pre-filled:
 
-Tells the AI **how to generate** content. If no CMS Prompt is configured for a template,
-`ai_generation.py` uses built-in default prompts automatically.
-
-| Field | What to enter | Example |
-|---|---|---|
-| Prompt Key | Unique identifier | `landing_page_generator` |
-| Template | Link to CMS Template | `Prethive Landing Page` |
-| Section Type | hero / sections / seo / faq / cta / custom | `hero` |
-| Sort Order | Run order — lower runs first | `10` |
-| Is Active | Must be checked to run | ✓ |
-| Prompt Text | AI instruction with `{content}` and `{schema}` placeholders | *(see below)* |
-| Temperature | 0.0 (focused) → 2.0 (creative) | `0.3` |
-| Max Tokens | Max response length | `8192` |
-
-**Prompt Text example:**
 ```
-You are a professional web content strategist.
+Analyze the uploaded document and generate structured content JSON.
 
-Read the following document and generate a complete landing page JSON.
-
-Document:
+Document text:
 {content}
 
-Output JSON matching this schema exactly:
+You must output JSON that exactly matches this schema:
 {schema}
 
 Rules:
-- hero.headline: punchy, max 10 words
-- features: extract 3-5 key features from the document
-- seo.meta_title: max 60 characters
-- seo.meta_description: max 160 characters
-- Return ONLY valid JSON, no explanation, no markdown.
+- Return ONLY valid JSON. No explanation, no markdown, no code fences.
+- Every field in the schema must be present in your output.
+- Keep text concise and professional.
+- For SEO fields: meta_title max 60 characters, meta_description max 160 characters.
+- Do not generate HTML, CSS, or Astro code — only JSON content values.
 ```
+
+Customise the prompt for your specific template if needed. `{content}` and `{schema}` are required placeholders.
 
 ---
 
-### Step 4 — CMS Page / CMS Blog / CMS Course *(content creation)*
+### Step 6 — Test Preview
 
-`Frappe Desk → Search → CMS Page → New`
+Click **Test Preview** button:
+- A dialog opens with sample JSON auto-generated from your schema
+- Edit the sample JSON if needed
+- Click Preview → rendered page opens in a new tab
+- Verify all placeholders render correctly
+
+---
+
+### Step 7 — Publish Template
+
+Click **Publish Template** button.
+
+- Validates template file and schema are present
+- Sets status to `Active`
+- Template is now visible to all CMS Users in the template picker
+
+---
+
+## Step-by-Step: CMS User
+
+### Step 1 — Create Content
+
+`Frappe Desk → Search → CMS Page → New` (or CMS Blog / CMS Course)
 
 | Field | What to enter |
 |---|---|
-| Title | Page/blog/course title |
-| Slug | Auto-generated from title — editable |
-| Template | Link to a CMS Template (optional — defaults apply if blank) |
-| Workflow State | Starts as `Draft` |
-| Source File | Upload PDF or DOCX — triggers AI generation on save |
-| Content JSON | Auto-filled by AI — can also be manually written |
-| Meta Title / Description | SEO fields |
-| OG Image | Social share image |
+| Title | Page title |
+| Slug | Auto-generated — editable |
+| Template | Select an Active template |
+| Source File | Upload PDF or DOCX |
 
-**What happens after saving with a source file:**
+Save the record.
+
+---
+
+### Step 2 — Generate Content
+
+Click **AI → Generate Content** button.
+
 ```
-Save → AI job queued → background worker runs → generation_status updates:
+generation_status updates:
   Queued → Extracting → Generating → Completed
-                                   → Failed (check AI Job Log)
+                                    → Failed (check AI Job Log)
 ```
-- On `Completed`: `content_json` is populated, ready for review
-- On `Failed`: check `ai_error_log` field on the doc, or open AI Job Log for full trace
 
-**Workflow progression:**
+On `Completed`: `content_json` field is populated with structured JSON.
+
+---
+
+### Step 3 — Review and Edit
+
+The `content_json` field shows the generated JSON.
+
+- Read through it — check all sections make sense
+- Edit directly in the field if anything needs changing
+- Save the record
+
+---
+
+### Step 4 — Preview
+
+Click **View → Preview** button.
+
+- Opens a new tab with your template rendered with the generated JSON
+- No AI call happens — instant render
+- Edit `content_json` → Save → Preview again (unlimited iterations)
+
+---
+
+### Step 5 — Publish
+
+Move workflow state:
 ```
-Draft → Review → Approved → Published → Archived
+Draft → Review → Approved → Published
 ```
-- **Content Editor** creates in Draft, edits content
-- **CMS Reviewer** reviews and moves to Approved
+
+- **Content Editor** creates in Draft
+- **CMS Reviewer** moves to Approved
 - **CMS Publisher** moves to Published — content is now live
-- Astro can fetch once Published
+
+Once Published, Astro frontend can fetch and render it.
 
 ---
 
-### Step 5 — CMS Media *(optional)*
+## AI Prompt Priority (how prompt is resolved)
 
-`Frappe Desk → Search → CMS Media → New`
-
-| Field | What to enter |
-|---|---|
-| Title | Descriptive name |
-| Media Type | Image / Document / Video / Other |
-| File URL | Upload the file |
-| CDN URL | Paste CDN URL if hosted externally — takes priority over File URL |
-| Alt Text | Image accessibility description |
-| Tags | Comma-separated search tags |
-
-Reference the `cdn_url` or `file_url` inside `content_json` when Astro needs to render images.
+```
+1. template.ai_prompt          (set on CMS Template — recommended)
+     ↓ if not customised
+2. Linked CMS Prompt records   (advanced — multiple prompts per section)
+     ↓ if none exist
+3. Hardcoded defaults          (built into ai_generation.py — always works)
+```
 
 ---
 
-### Step 6 — CMS Translation *(optional, multilingual)*
+## Hardcoded Defaults (built-in fallback)
 
-`Frappe Desk → Search → CMS Translation → New`
+If no CMS Template or prompt is configured, these defaults are used:
 
-| Field | What to enter |
-|---|---|
-| Reference Doctype | CMS Page / CMS Blog / CMS Course |
-| Reference Name | The specific content record to translate |
-| Language | ISO 639-1 code — `ta`, `hi`, `fr`, `de` |
-| Status | Starts as `Pending` — auto-updates |
-
-On completion, `translated_json` holds the translated version of `content_json`.
-Astro fetches it by passing `?lang=ta` on the API call.
-
-> Translation job execution is not yet wired — `translated_json` must be filled manually for now.
-
----
-
-### Step 7 — AI Job Log *(monitor background jobs)*
-
-`Frappe Desk → Search → AI Job Log`
-
-| Field | Meaning |
-|---|---|
-| Reference Doctype / Name | Which content triggered this job |
-| Job Type | Generate / Translate / Bulk |
-| Status | Queued → Running → Completed / Failed |
-| AI Provider | Which AI provider was used |
-| Duration Seconds | How long the job took |
-| Prompt Snapshot | The exact prompt sent to AI |
-| Raw Response | Full AI response |
-| Error Trace | Full error if status is Failed |
-
-**Debugging a failed job:**
-1. Open AI Job Log → read `Error Trace`
-2. Common causes: wrong API key, file not found, AI returned invalid JSON
-3. Fix the issue → re-save the content doc → new job queued automatically
-
----
-
-### Step 8 — API Cache *(automatic)*
-
-`Frappe Desk → Search → API Cache`
-
-Populated automatically. Cleared when content is updated or published.
-TTL controlled by `api_cache_ttl` in CMS Settings (default 300 seconds).
-
-Only interact with this to manually delete a stuck cache entry.
-
----
-
-## Hardcoded Defaults in ai_generation.py
-
-If no CMS Template schema or CMS Prompt is set, these defaults are used automatically:
-
-| Content Type | Default schema sections | Default prompt behaviour |
+| Content Type | Schema sections | Prompt behaviour |
 |---|---|---|
-| Landing Page | hero, features, about, cta_section, seo | Extracts headline, features list, CTA, SEO tags |
-| Blog | intro, sections[], conclusion, tags[], seo | Structures into intro → body sections → conclusion |
-| Course | overview, objectives[], modules[], seo | Breaks into modules with lesson lists |
+| Landing Page | hero, features, about, cta_section, seo | Extracts headline, features, CTA, SEO |
+| Blog | intro, sections[], conclusion, tags[], seo | Structures into intro → sections → conclusion |
+| Course | overview, objectives[], modules[], seo | Breaks into modules with lessons |
+
+---
+
+## Template Placeholder Syntax
+
+```html
+<!-- Simple string field -->
+{{hero.headline}}
+
+<!-- Nested object -->
+{{hero.cta_url}}
+
+<!-- Array item by index -->
+{{features.0.title}}
+{{features.1.description}}
+{{steps.0.number}}
+{{steps.0.title}}
+
+<!-- SEO -->
+{{seo.meta_title}}
+{{seo.meta_description}}
+```
+
+Unmatched placeholders are left as-is (not replaced).
+
+---
+
+## REST API
+
+### Content endpoints (guest-accessible, for Astro)
+```
+GET /api/method/pdcms_app.api.v1.pages.get_page?slug=<slug>&lang=en
+GET /api/method/pdcms_app.api.v1.pages.get_slugs
+GET /api/method/pdcms_app.api.v1.blogs.get_blog?slug=<slug>
+GET /api/method/pdcms_app.api.v1.blogs.get_blogs
+GET /api/method/pdcms_app.api.v1.courses.get_course?slug=<slug>
+GET /api/method/pdcms_app.api.v1.courses.get_courses
+```
+
+### Template endpoints (requires login)
+```
+GET /api/method/pdcms_app.api.v1.templates.get_active_templates
+GET /api/method/pdcms_app.api.v1.templates.get_template?name=<name>
+POST /api/method/pdcms_app.api.v1.templates.publish_template
+```
+
+### Admin endpoints (requires CMS role)
+```
+POST /api/method/pdcms_app.api.v1.admin.trigger_generation
+POST /api/method/pdcms_app.api.v1.admin.trigger_translation
+GET  /api/method/pdcms_app.api.v1.admin.get_job_status
+```
+
+### Preview endpoints (requires CMS role)
+```
+GET /api/method/pdcms_app.api.v1.preview.render_page?name=PAGE-0001
+GET /api/method/pdcms_app.api.v1.preview.render_blog?name=BLOG-0001
+GET /api/method/pdcms_app.api.v1.preview.render_course?name=COURSE-0001
+POST /api/method/pdcms_app.api.v1.preview.render_template_test
+```
 
 ---
 
 ## Astro Integration
 
-Frappe exposes content via REST API:
-
-```
-GET https://<site>/api/resource/CMS Page/<name>
-GET https://<site>/api/resource/CMS Blog/<name>
-GET https://<site>/api/resource/CMS Course/<name>
-```
-
-`content_json` is the structured data Astro renders.
-`template.astro_component` tells Astro which component to use.
-
 ```js
-const res = await fetch(`${FRAPPE_URL}/api/resource/CMS Page/${slug}`)
+// Fetch published page by slug
+const res = await fetch(`${FRAPPE_URL}/api/method/pdcms_app.api.v1.pages.get_page?slug=${slug}`)
 const { data } = await res.json()
-const contentJson = JSON.parse(data.content_json)
-const Component = componentMap[data.astro_component]
-// render Component with contentJson
+
+// data.content = parsed content_json
+// data.template = CMS Template name
+// data.seo = SEO fields
+
+// Map template name to Astro component
+const Component = componentMap[data.template]
+// render Component with data.content
 ```
 
 ---
@@ -388,19 +424,26 @@ pdcms_app/
   hooks.py                        — app config, scheduled jobs, permissions
   install.py                      — creates roles + default settings on install
   utils/
-    slugify.py                    — URL slug generator (used by Page, Blog, Course)
+    slugify.py                    — URL slug generator
   jobs/
     ai_generation.py              — full AI pipeline: extract → prompt → call AI → save JSON
     ai_job_cleanup.py             — daily purge of AI Job Log records older than 30 days
-    cache_cleanup.py              — hourly cache eviction (partial — needs improvement)
+    cache_cleanup.py              — hourly cache eviction (partial)
   cms/
     permissions/
-      page_permissions.py         — role-based access control for all CMS doctypes
+      page_permissions.py         — role-based access for all CMS doctypes
+    services/
+      preview_engine.py           — renders template file with {{dot.path}} injection
+      cache_service.py            — Redis-based API response caching
+      document_extractor.py       — PDF/DOCX text extraction
+      translation_service.py      — translation job orchestration
+    workflows/
+      publish.py                  — publish/archive workflow handlers
   pdcms/                          — Frappe module
     doctype/
       cms_settings/               — global singleton: AI provider, keys, cache TTL
-      cms_template/               — content structure + JSON schema + SEO mapping
-      cms_prompt/                 — AI prompt templates per section
+      cms_template/               — template: file, schema, prompt, preview image
+      cms_prompt/                 — advanced per-section AI prompts
       cms_page/                   — landing pages
       cms_blog/                   — blog posts
       cms_course/                 — courses
@@ -408,6 +451,32 @@ pdcms_app/
       cms_translation/            — multilingual translation records
       ai_job_log/                 — background job state tracking
       api_cache/                  — API response cache records
+
+ai/
+  providers/                      — Groq, OpenAI, Claude, Ollama, HuggingFace
+  generators/content_generator.py — template-driven multi-prompt generation
+  validators/schema_validator.py  — JSON schema validation + LLM response parsing
+  translators/                    — pluggable translation providers
+
+api/
+  v1/
+    pages.py                      — guest page endpoints
+    blogs.py                      — guest blog endpoints
+    courses.py                    — guest course endpoints
+    templates.py                  — template picker + publish endpoints
+    admin.py                      — generation/translation trigger endpoints
+    preview.py                    — preview render endpoints
+  response.py                     — standard response envelope
+
+public/js/
+  cms_template.js                 — admin UI: publish, validate, test preview
+  cms_page.js                     — user UI: generate, preview, translate
+  cms_blog.js                     — user UI: generate, preview
+  cms_course.js                   — user UI: generate, preview
+
+utils/
+  slugify.py                      — text-to-slug utility
+  logger.py                       — frappe logger wrappers
 ```
 
 ---
@@ -416,8 +485,8 @@ pdcms_app/
 
 | Item | Priority | Impact |
 |---|---|---|
-| `public/js/cms_page.js` etc — 4 form JS files | Medium | Custom buttons on Frappe forms (e.g. manual re-trigger generation) |
-| `cache_cleanup.py` — fix eviction by `expires_at` | Low | Old API Cache records not cleaned up properly |
-| `api_cache.py` — read/write serving logic | Medium | Cache not actually serving Astro yet |
-| Translation job execution | Medium | `translated_json` must be filled manually for now |
-| Astro frontend | High | Nothing renders until Astro consumes the API |
+| Astro frontend — consumes API and renders templates | High | Nothing visible to end users until this is built |
+| Schema-driven form editor — edit content fields individually instead of raw JSON | Medium | Better CMS User experience |
+| `api_cache.py` — read/write serving logic | Medium | API caching not serving Astro yet |
+| `cache_cleanup.py` — fix TTL-based eviction | Low | Old records not cleaned up properly |
+| Translation provider implementation (DeepL, Google) | Low | Multilingual not working end-to-end |

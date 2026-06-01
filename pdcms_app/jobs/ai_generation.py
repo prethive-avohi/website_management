@@ -297,21 +297,27 @@ def _extract_docx(path):
 # ---------------------------------------------------------------------------
 
 def _get_schema_and_prompt(doc, content_type):
-    # Try to load schema from linked CMS Template
     schema = {}
     prompt_text = ""
 
     if doc.template:
         template = frappe.get_doc("CMS Template", doc.template)
+
+        # 1. Schema from template
         schema = template.get_schema()
 
-        prompts = template.get_prompts()
-        if prompts:
-            # Use the first active prompt's text
-            prompt_doc = frappe.get_doc("CMS Prompt", prompts[0]["name"])
-            prompt_text = prompt_doc.prompt_text
+        # 2. Prompt priority: template.ai_prompt → linked CMS Prompt → hardcoded default
+        prompt_text = template.get_prompt()
 
-    # Fall back to hardcoded defaults if nothing configured
+        # If template has no custom prompt, check linked CMS Prompt records
+        from pdcms_app.pdcms.doctype.cms_template.cms_template import DEFAULT_PROMPT
+        if prompt_text == DEFAULT_PROMPT:
+            prompts = template.get_prompts()
+            if prompts:
+                prompt_doc = frappe.get_doc("CMS Prompt", prompts[0]["name"])
+                prompt_text = prompt_doc.prompt_text
+
+    # Fall back to hardcoded defaults if no template at all
     if not schema:
         schema = _default_schema(content_type)
     if not prompt_text:

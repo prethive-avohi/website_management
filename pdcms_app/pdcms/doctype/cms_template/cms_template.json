@@ -12,8 +12,14 @@
     "status",
     "cb1",
     "description",
+    "preview_image",
+    "sb_template_file",
+    "template_file",
+    "template_file_help",
     "sb_schema",
     "json_schema",
+    "sb_prompt",
+    "ai_prompt",
     "sb_seo",
     "seo_mapping",
     "sb_api",
@@ -67,6 +73,25 @@
       "fieldtype": "Small Text",
       "label": "Description"
     },
+    {
+      "fieldname": "preview_image",
+      "fieldtype": "Attach Image",
+      "label": "Preview Image",
+      "description": "Thumbnail shown in template selector"
+    },
+    {"fieldname": "sb_template_file", "fieldtype": "Section Break", "label": "Template File"},
+    {
+      "fieldname": "template_file",
+      "fieldtype": "Attach",
+      "label": "Template File (.html / .astro)",
+      "description": "Upload your converted HTML or Astro template. Use {{field.subfield}} placeholders for content injection."
+    },
+    {
+      "fieldname": "template_file_help",
+      "fieldtype": "HTML",
+      "label": "Placeholder Help",
+      "options": "<div class='alert alert-info' style='margin:8px 0;padding:8px 12px;font-size:12px;'><b>Placeholder syntax:</b> Use <code>{{hero.headline}}</code>, <code>{{features.0.title}}</code>, <code>{{seo.meta_title}}</code> etc. — dot-path into your content_json. Arrays use index: <code>{{steps.0.title}}</code>.</div>"
+    },
     {"fieldname": "sb_schema", "fieldtype": "Section Break", "label": "JSON Schema"},
     {
       "fieldname": "json_schema",
@@ -74,6 +99,13 @@
       "label": "Expected JSON Schema",
       "options": "JSON",
       "description": "Canonical JSON Schema (draft-07) that all generated content must validate against"
+    },
+    {"fieldname": "sb_prompt", "fieldtype": "Section Break", "label": "AI Prompt"},
+    {
+      "fieldname": "ai_prompt",
+      "fieldtype": "Long Text",
+      "label": "Content Generation Prompt",
+      "description": "Instructions for AI when generating content from an uploaded document. Use {content} for the document text and {schema} for the JSON schema. A default prompt is pre-filled — customise as needed."
     },
     {"fieldname": "sb_seo", "fieldtype": "Section Break", "label": "SEO Mapping"},
     {
