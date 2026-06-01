@@ -2,7 +2,10 @@
   "permissions": {
     "allow": [
       "Bash(Get-ChildItem -Path \"e:\\\\website_management\\\\pdcms_app\\\\doctype\" -Name)",
-      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('module:', d.get\\('module'\\)\\)\")"
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('module:', d.get\\('module'\\)\\)\")",
+      "Bash(Get-ChildItem -Path \"e:\\\\website_management\\\\pdcms_app\" -Recurse -File)",
+      "Bash(Select-Object FullName)",
+      "Bash(Sort-Object FullName)"
     ]
   }
 }

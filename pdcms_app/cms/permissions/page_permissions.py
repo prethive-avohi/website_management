@@ -2,10 +2,11 @@ import frappe
 
 
 def has_permission(doc, ptype, user):
-    if frappe.has_role("CMS Admin", user):
+    user_roles = frappe.get_roles(user)
+    if "CMS Admin" in user_roles:
         return True
-    if ptype in ("read", "write", "submit") and frappe.has_role("Content Editor", user):
+    if ptype in ("read", "write", "submit") and "Content Editor" in user_roles:
         return True
-    if ptype == "submit" and frappe.has_role("CMS Publisher", user):
+    if ptype == "submit" and "CMS Publisher" in user_roles:
         return True
     return None
