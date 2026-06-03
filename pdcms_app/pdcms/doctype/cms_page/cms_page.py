@@ -23,6 +23,12 @@ class CMSPage(Document):
         if self.source_file:
             self._enqueue_generation()
 
+    def on_trash(self):
+        # Clear the ai_job link so Frappe doesn't block deletion due to the reference
+        if self.ai_job:
+            frappe.db.set_value("CMS Page", self.name, "ai_job", None)
+            frappe.db.delete("AI Job Log", {"name": self.ai_job})
+
     def _validate_content_json(self):
         if not self.content_json:
             return

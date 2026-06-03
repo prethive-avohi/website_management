@@ -26,6 +26,11 @@ class CMSCourse(Document):
                 course_name=self.name,
             )
 
+    def on_trash(self):
+        if self.ai_job:
+            frappe.db.set_value("CMS Course", self.name, "ai_job", None)
+            frappe.db.delete("AI Job Log", {"name": self.ai_job})
+
     def on_update(self):
         frappe.cache().delete_keys(f"pdcms:course:{self.slug}:*")
 

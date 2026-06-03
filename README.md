@@ -25,50 +25,33 @@ Publishes template                      Reviews and edits content
 ```
 ADMINISTRATOR SIDE
 ──────────────────
-Figma Design
-    ↓ (convert externally — v0, AI, manual)
-HTML / Astro Template File
-    ↓
-CMS Template record:
-  - Upload template file (.html / .astro)
-  - Define JSON schema (what AI must fill)
-  - Write AI prompt (or use default)
-  - Set preview image
-  - Click "Publish Template" → status: Active
-    ↓
+1. CMS Settings → set AI provider + API key (one-time)
+2. CMS Template → New → name, type, Astro component reference
+3. Upload HTML/Astro template file with {{dot.path}} placeholders
+4. Paste JSON Schema → defines what AI must output
+5. Customize AI prompt (default pre-filled, {content} + {schema} placeholders)
+6. Click "Publish Template" → status: Active → visible to CMS users
 
 CMS USER SIDE
 ─────────────
-Create CMS Page / Blog / Course
-    ↓
-Select Template (from Active templates)
-    ↓
-Upload source document (PDF or DOCX)
-    ↓
-Click "Generate Content"
-    ↓
-AI pipeline runs in background:
-  1. Extract text from PDF/DOCX
-  2. Load schema from CMS Template
-  3. Load prompt from CMS Template (or CMS Prompt → hardcoded default)
-  4. Call AI provider (Groq / OpenAI / Claude / Ollama)
-  5. Parse JSON response
-  6. Save content_json to doc
-    ↓
-generation_status → Completed (or Failed — check AI Job Log)
-    ↓
-Review content_json in Frappe desk (edit if needed)
-    ↓
-Click "Preview" → rendered HTML opens in new tab
-  (Template file + content_json injected via {{dot.path}} placeholders)
-    ↓
-Edit → Preview → Edit → Preview (unlimited iterations)
-    ↓
-Workflow: Draft → Review → Approved → Published
-    ↓
-Astro frontend fetches published content_json via REST API
-    ↓
-API Cache serves repeated requests (TTL from CMS Settings)
+7.  CMS Page / Blog / Course → New
+8.  Enter title, select Active template, attach PDF or DOCX → Save
+9.  "Generate Content" appears as primary button → click it
+10. Yellow spinner banner + auto-poll every 4s (no manual refresh needed)
+11. Page auto-reloads on completion → green banner confirms success
+12. Review content_json field → edit directly if needed → Save
+13. Click "Preview" (primary button) → rendered HTML opens in new tab
+     Template file + content_json injected via {{dot.path}} placeholders
+14. Edit JSON → Save → Preview again — unlimited iterations
+15. Workflow: Draft → Review → Approved → Published
+16. Astro frontend fetches published content via REST API → renders page
+
+BACKGROUND
+──────────
+17. AI Job Log tracks every generation — check for errors if generation fails
+18. Deleting a Page/Blog/Course also deletes its linked AI Job Log (no warnings)
+19. API Cache serves repeated Astro requests (TTL set in CMS Settings)
+20. Hourly job evicts expired cache, daily job purges AI Job Logs older than 30 days
 ```
 
 ---
