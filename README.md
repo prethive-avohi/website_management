@@ -412,16 +412,31 @@ pdcms_app/
     ai_generation.py              — full AI pipeline: extract → prompt → call AI → save JSON
     ai_job_cleanup.py             — daily purge of AI Job Log records older than 30 days
     cache_cleanup.py              — hourly cache eviction (partial)
+    translation.py                — background translation job handler
+  ai/
+    translators/
+      base.py                     — abstract translator interface
+      factory.py                  — returns configured translator from CMS Settings
+      custom_api.py               — pluggable external translation API
   cms/
     permissions/
       page_permissions.py         — role-based access for all CMS doctypes
     services/
       preview_engine.py           — renders template file with {{dot.path}} injection
       cache_service.py            — Redis-based API response caching
-      document_extractor.py       — PDF/DOCX text extraction
+      document_extractor.py       — PDF/DOCX/TXT text extraction
       translation_service.py      — translation job orchestration
     workflows/
       publish.py                  — publish/archive workflow handlers
+  api/
+    response.py                   — standard response envelope
+    v1/
+      pages.py                    — guest page endpoints
+      blogs.py                    — guest blog endpoints
+      courses.py                  — guest course endpoints
+      templates.py                — template picker + publish endpoints
+      admin.py                    — generation/translation trigger endpoints
+      preview.py                  — preview render endpoints
   pdcms/                          — Frappe module
     doctype/
       cms_settings/               — global singleton: AI provider, keys, cache TTL
@@ -435,31 +450,11 @@ pdcms_app/
       ai_job_log/                 — background job state tracking
       api_cache/                  — API response cache records
 
-ai/
-  providers/                      — Groq, OpenAI, Claude, Ollama, HuggingFace
-  generators/content_generator.py — template-driven multi-prompt generation
-  validators/schema_validator.py  — JSON schema validation + LLM response parsing
-  translators/                    — pluggable translation providers
-
-api/
-  v1/
-    pages.py                      — guest page endpoints
-    blogs.py                      — guest blog endpoints
-    courses.py                    — guest course endpoints
-    templates.py                  — template picker + publish endpoints
-    admin.py                      — generation/translation trigger endpoints
-    preview.py                    — preview render endpoints
-  response.py                     — standard response envelope
-
 public/js/
   cms_template.js                 — admin UI: publish, validate, test preview
   cms_page.js                     — user UI: generate, preview, translate
   cms_blog.js                     — user UI: generate, preview
   cms_course.js                   — user UI: generate, preview
-
-utils/
-  slugify.py                      — text-to-slug utility
-  logger.py                       — frappe logger wrappers
 ```
 
 ---
