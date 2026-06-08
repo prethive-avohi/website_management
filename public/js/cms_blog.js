@@ -71,6 +71,13 @@ function _start_polling(frm) {
 }
 
 function _add_menu_buttons(frm) {
+    if (frm.doc.content_json) {
+        frm.add_custom_button(__("Preview"), () => {
+            const url = `/api/method/pdcms_app.api.v1.preview.render_blog?name=${encodeURIComponent(frm.docname)}`;
+            window.open(url, "_blank");
+        }, __("View"));
+    }
+
     frm.add_custom_button(__("Generate Content"), () => {
         _trigger_generation(frm);
     }, __("AI"));
