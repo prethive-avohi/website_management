@@ -21,117 +21,93 @@ frappe.ui.form.on("CMS Template", {
             return;
         }
 
-        // ── Publish button (Draft → Active) ─────────────────────────────────
-        if (frm.doc.status === "Draft") {
-            frm.add_custom_button(__("Publish Template"), () => {
-                if (!frm.doc.template_file) {
-                    frappe.msgprint({
-                        title: "Missing Template File",
-                        message: "Upload an HTML or Astro template file before publishing.",
-                        indicator: "orange",
-                    });
-                    return;
-                }
-                if (!frm.doc.json_schema) {
-                    frappe.msgprint({
-                        title: "Missing JSON Schema",
-                        message: "Define a JSON schema before publishing.",
-                        indicator: "orange",
-                    });
-                    return;
-                }
-                frappe.confirm(
-                    "Publish this template? It will become available for all CMS users.",
-                    () => {
-                        frappe.call({
-                            method: "pdcms_app.api.v1.templates.publish_template",
-                            args: { name: frm.docname },
-                            callback(r) {
-                                if (r.message?.success) {
-                                    frappe.show_alert({ message: "Template published.", indicator: "green" });
-                                    frm.reload_doc();
-                                }
-                            },
-                        });
-                    }
-                );
-            }).addClass("btn-primary");
-        }
-
-        // ── Deprecate button (Active → Deprecated) ───────────────────────────
-        if (frm.doc.status === "Active") {
-            frm.add_custom_button(__("Deprecate"), () => {
-                frappe.confirm("Deprecate this template? CMS users will no longer see it.", () => {
-                    frm.set_value("status", "Deprecated");
-                    frm.save();
+        // ── Publish Template ─────────────────────────────────────────────────
+        frm.add_custom_button(__("Publish Template"), () => {
+            if (!frm.doc.template_file) {
+                frappe.msgprint({ title: "Missing Template File", message: "Upload an HTML or Astro template file before publishing.", indicator: "orange" });
+                return;
+            }
+            if (!frm.doc.json_schema) {
+                frappe.msgprint({ title: "Missing JSON Schema", message: "Define a JSON schema before publishing.", indicator: "orange" });
+                return;
+            }
+            if (frm.doc.status === "Active") {
+                frappe.msgprint({ title: "Already Published", message: "This template is already Active.", indicator: "blue" });
+                return;
+            }
+            frappe.confirm("Publish this template? It will become available for all CMS users.", () => {
+                frappe.call({
+                    method: "pdcms_app.api.v1.templates.publish_template",
+                    args: { name: frm.docname },
+                    callback(r) {
+                        if (r.message?.success) {
+                            frappe.show_alert({ message: "Template published.", indicator: "green" });
+                            frm.reload_doc();
+                        }
+                    },
                 });
             });
-        }
+        }).addClass("btn-primary");
+
+        // ── Deprecate ────────────────────────────────────────────────────────
+        frm.add_custom_button(__("Deprecate"), () => {
+            frappe.confirm("Deprecate this template? CMS users will no longer see it.", () => {
+                frm.set_value("status", "Deprecated");
+                frm.save();
+            });
+        });
 
         // ── Validate Schema ──────────────────────────────────────────────────
-        if (frm.doc.json_schema) {
-            frm.add_custom_button(__("Validate Schema"), () => {
-                try {
-                    const parsed = JSON.parse(frm.doc.json_schema);
-                    frappe.show_alert({ message: "JSON Schema is valid ✓", indicator: "green" });
-                    // Show field count
-                    const keys = parsed.properties ? Object.keys(parsed.properties) : [];
-                    if (keys.length) {
-                        frappe.show_alert({
-                            message: `Top-level fields: ${keys.join(", ")}`,
-                            indicator: "blue",
-                        });
-                    }
-                } catch (e) {
-                    frappe.show_alert({ message: "Invalid JSON: " + e.message, indicator: "red" });
+        frm.add_custom_button(__("Validate Schema"), () => {
+            if (!frm.doc.json_schema) {
+                frappe.msgprint({ title: "No Schema", message: "Paste a JSON schema first.", indicator: "orange" });
+                return;
+            }
+            try {
+                const parsed = JSON.parse(frm.doc.json_schema);
+                frappe.show_alert({ message: "JSON Schema is valid ✓", indicator: "green" });
+                const keys = parsed.properties ? Object.keys(parsed.properties) : [];
+                if (keys.length) {
+                    frappe.show_alert({ message: `Top-level fields: ${keys.join(", ")}`, indicator: "blue" });
                 }
-            });
-        }
+            } catch (e) {
+                frappe.show_alert({ message: "Invalid JSON: " + e.message, indicator: "red" });
+            }
+        });
 
         // ── Test Preview ─────────────────────────────────────────────────────
-        if (frm.doc.template_file) {
-            frm.add_custom_button(__("Test Preview"), () => {
-                // Build sample JSON from schema if available
-                let sampleJson = "{}";
-                if (frm.doc.json_schema) {
-                    try {
-                        const schema = JSON.parse(frm.doc.json_schema);
-                        sampleJson = JSON.stringify(_schema_to_sample(schema), null, 2);
-                    } catch (e) {
-                        frappe.show_alert({ message: "Could not parse schema: " + e.message, indicator: "orange" });
-                    }
-                }
-
-                frappe.prompt(
-                    [{
-                        fieldname: "sample_json",
-                        fieldtype: "Code",
-                        label: "Sample content_json",
-                        options: "JSON",
-                        reqd: 1,
-                        default: sampleJson,
-                    }],
-                    (values) => {
-                        try { JSON.parse(values.sample_json); }
-                        catch (e) { frappe.msgprint("Invalid JSON: " + e.message); return; }
-
-                        frappe.call({
-                            method: "pdcms_app.api.v1.preview.render_template_test",
-                            args: { template_name: frm.docname, content_json: values.sample_json },
-                            callback(r) {
-                                if (r.message) {
-                                    const w = window.open("", "_blank");
-                                    w.document.write(r.message);
-                                    w.document.close();
-                                }
-                            },
-                        });
-                    },
-                    __("Test Template Preview"),
-                    __("Preview")
-                );
-            }, __("View"));
-        }
+        frm.add_custom_button(__("Test Preview"), () => {
+            if (!frm.doc.template_file) {
+                frappe.msgprint({ title: "No Template File", message: "Upload a template file first.", indicator: "orange" });
+                return;
+            }
+            let sampleJson = "{}";
+            if (frm.doc.json_schema) {
+                try {
+                    sampleJson = JSON.stringify(_schema_to_sample(JSON.parse(frm.doc.json_schema)), null, 2);
+                } catch (e) { }
+            }
+            frappe.prompt(
+                [{ fieldname: "sample_json", fieldtype: "Code", label: "Sample content_json", options: "JSON", reqd: 1, default: sampleJson }],
+                (values) => {
+                    try { JSON.parse(values.sample_json); }
+                    catch (e) { frappe.msgprint("Invalid JSON: " + e.message); return; }
+                    frappe.call({
+                        method: "pdcms_app.api.v1.preview.render_template_test",
+                        args: { template_name: frm.docname, content_json: values.sample_json },
+                        callback(r) {
+                            if (r.message) {
+                                const w = window.open("", "_blank");
+                                w.document.write(r.message);
+                                w.document.close();
+                            }
+                        },
+                    });
+                },
+                __("Test Template Preview"),
+                __("Preview")
+            );
+        }, __("View"));
 
         // ── View linked prompts ──────────────────────────────────────────────
         frm.add_custom_button(__("View Prompts"), () => {
