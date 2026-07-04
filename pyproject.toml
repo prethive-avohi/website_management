@@ -3,14 +3,15 @@ requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "pdcms_app"
+name = "paideia_cms"
 version = "1.0.0"
 description = "AI-powered multilingual headless CMS on Frappe"
 requires-python = ">=3.12"
 license = "MIT"
 dependencies = [
-    "PyPDF2>=3.0.0",
+    "pdfplumber>=0.11.0",
     "python-docx>=1.1.0",
+    "openpyxl>=3.1.0",
     "requests>=2.31.0",
     "jsonschema>=4.21.0",
 ]
@@ -19,5 +20,5 @@ dependencies = [
 where = ["."]
 
 [tool.setuptools.package-data]
-"pdcms_app" = ["**/*.json", "**/*.txt"]
+"paideia_cms" = ["**/*.json", "**/*.txt"]
 "public" = ["**/*.js", "**/*.css"]

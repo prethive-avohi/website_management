@@ -4,7 +4,7 @@ with open("requirements.txt") as f:
     install_requires = [l.strip() for l in f if l.strip() and not l.startswith("#")]
 
 setup(
-    name="pdcms_app",
+    name="paideia_cms",
     version="1.0.0",
     description="AI-powered multilingual headless CMS on Frappe",
     author="PDCMS",

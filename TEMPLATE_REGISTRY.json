@@ -1,0 +1,38 @@
+{
+  "_comment": "Source of truth mapping CMS Template astro_component values to frontend components. Update this whenever a new Astro component is added to the frontend.",
+  "components": [
+    {
+      "astro_component": "LandingPage",
+      "template_type": "Landing Page",
+      "description": "Full landing page — hero, stats, philosophy, destinations, process, testimonials, CTA, footer",
+      "frontend_file": "src/components/pages/LandingPage.astro",
+      "required_image_slots": [
+        {"key": "hero.image", "label": "Hero Background", "description": "1920x600 landscape"},
+        {"key": "seo.og_image", "label": "OG Share Image", "description": "1200x630"}
+      ],
+      "top_level_schema_keys": ["seo", "nav", "hero", "stats", "philosophy", "destinations", "process", "testimonials", "cta_section", "footer"]
+    },
+    {
+      "astro_component": "BlogPost",
+      "template_type": "Blog",
+      "description": "Blog article layout — header, body, author bio, related posts",
+      "frontend_file": "src/components/pages/BlogPost.astro",
+      "required_image_slots": [
+        {"key": "hero.image", "label": "Hero / Featured Image", "description": "1200x630 landscape"},
+        {"key": "author.avatar", "label": "Author Avatar", "description": "Square 200x200"}
+      ],
+      "top_level_schema_keys": ["seo", "hero", "body", "author", "tags"]
+    },
+    {
+      "astro_component": "CoursePage",
+      "template_type": "Course",
+      "description": "Course detail page — hero, overview, modules, fees, accreditation, CTA",
+      "frontend_file": "src/components/pages/CoursePage.astro",
+      "required_image_slots": [
+        {"key": "hero.image", "label": "Course Hero Image", "description": "1920x500 landscape"},
+        {"key": "institution.logo", "label": "Institution Logo", "description": "PNG transparent, 300x100"}
+      ],
+      "top_level_schema_keys": ["seo", "hero", "overview", "modules", "fees", "entry_requirements", "accreditation", "cta"]
+    }
+  ]
+}
