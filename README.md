@@ -1,14 +1,73 @@
 # paideia_cms — Frappe CMS App
 
-Template-driven headless CMS built on the Frappe Framework. Manages all content (pages, blogs, courses), orchestrates AI content generation through the agent service, handles multilingual translation, and serves a REST API consumed by the Astro frontend.
+Template-driven headless CMS built on the Frappe Framework. Editors manage all content here — pages, blogs, courses — and the system handles AI generation, translation, preview, and publishing automatically. The frontend (Astro) pulls everything from this app at build time.
 
-## Related repos
+---
 
-| Repo | Purpose |
-|---|---|
-| `paideia_cms` (this) | Frappe backend — doctypes, API, AI orchestration |
-| [paideia-agents](../../../paideia-agents) | FastAPI AI agent service — content generation |
-| [paideia-cms-fe](../../../paideia-cms-fe) | Astro frontend — static site served to visitors |
+## What this app does
+
+### 1. Template-driven content
+Every page type is backed by a **CMS Template** that defines:
+- A Jinja2 HTML file — the visual design of the page
+- A JSON Schema — the exact structure AI must output
+- An AI prompt — instructions for content generation
+
+Editors never write code. They pick a template, upload a PDF/DOCX, click Generate.
+
+### 2. AI content generation
+Upload a PDF or DOCX → Frappe extracts the text → dispatches to the `paideia-agents` FastAPI service → AI (OpenAI / Groq / Claude / Ollama) generates structured `content_json` matching the template's schema → result webhooks back and saves automatically.
+
+The AI job runs in the background. Editors see live progress and the form auto-reloads when done.
+
+### 3. Preview = production
+Editors click **View → Preview** and see exactly what visitors will see. Frappe renders the Jinja2 template with `content_json` injected — the same endpoint the Astro frontend calls at build time. No surprises between preview and live.
+
+### 4. Multilingual translation
+Any published document can be translated. Frappe calls DeepL or Google Cloud Translate on every string in `content_json` and stores the result in a **CMS Translation** record. The editor reviews, publishes, and the next Astro build serves translated content at `/pt-br/<slug>`, `/fr/<slug>`, etc.
+
+Adding a new language = one line in the frontend config + create translations in Frappe. No route code changes.
+
+### 5. Workflow + publish → live
+Documents go through: **Draft → Review → Approved → Published**. On Publish, Frappe fires a deploy hook to AWS Amplify, which rebuilds the Astro site automatically. Live within minutes.
+
+### 6. Caching
+All public API responses are cached in Redis with a configurable TTL. Cache invalidates automatically on document update or publish.
+
+### 7. Ingest API
+External systems can push course and blog content directly into Frappe via authenticated endpoints — useful for syncing from university portals.
+
+---
+
+## How the three apps align
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    paideia_cms (Frappe)                      │
+│                                                             │
+│  Editor creates CMS Page → attaches PDF                     │
+│  → "AI → Generate Content"                                  │
+│        ↓                                                    │
+│  Frappe extracts text → POST /api/v1/generate ──────────────┼──► paideia-agents
+│        ↓           ◄── webhooks step/completed/failed ──────┼──◄  (OpenAI/Groq/Claude)
+│  content_json saved                                         │
+│        ↓                                                    │
+│  Editor previews → publishes                                │
+│  → deploy hook ─────────────────────────────────────────────┼──► AWS Amplify rebuild
+│                                                             │          ↓
+│  Astro build calls Frappe API ◄─────────────────────────────┼──◄ paideia-cms-fe
+│    /registry   → all published slugs                        │    getStaticPaths()
+│    /pages      → SEO metadata per page                      │    getCmsPage()
+│    /preview    → rendered HTML per page                     │    getCmsPageHtml()
+│    /blogs      → blog content_json                          │    getCmsBlog()
+│    /courses    → course content_json                        │    getCmsCourse()
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Key design decisions:**
+- Landing page design lives in Frappe (HTML template file) — each page can look completely different, zero Astro changes needed
+- Blog and course design lives in Astro (fixed components) — CMS supplies content only
+- Frappe never calls AI providers directly — all AI runs in the agent service, no keys in Frappe
+- Preview and production use the same render endpoint — what the editor sees is exactly what goes live
 
 ---
 
@@ -21,15 +80,15 @@ bench --site cms migrate
 bench start
 ```
 
-Then open Frappe Desk → CMS Settings and configure:
+Open Frappe Desk → CMS Settings and configure:
 
 | Setting | Value |
 |---|---|
-| Agent Service URL | `http://localhost:8001` (local) or deployed agent URL |
+| Agent Service URL | `http://localhost:8001` |
 | Agent Service Secret | Any strong random string — must match `AGENT_SERVICE_SECRET` in agent `.env` |
 | Translation Provider | `deepl` / `google` / `custom` |
 | Translation API Key | Your DeepL or Google Cloud key |
-| Deploy Hook URL | AWS Amplify webhook URL (triggers Astro rebuild on publish) |
+| Deploy Hook URL | AWS Amplify webhook URL |
 
 ---
 
@@ -38,14 +97,14 @@ Then open Frappe Desk → CMS Settings and configure:
 | Doctype | Purpose |
 |---|---|
 | CMS Settings | Global singleton — agent URL/secret, translation, cache TTL, deploy hook |
-| CMS Template | Template: Jinja2 HTML file, JSON schema, AI prompt, Astro component ref |
-| CMS Page | Landing pages (slug → rendered HTML via template) |
+| CMS Template | Jinja2 HTML file + JSON schema + AI prompt + Astro component ref |
+| CMS Page | Landing pages — slug → rendered HTML via template |
 | CMS Blog | Blog posts |
 | CMS Course | Courses keyed by institution / level / slug |
 | CMS Translation | Translated content per language per document |
 | CMS Media | Media asset library |
 | CMS Redirect | URL redirect rules fetched by Astro at build time |
-| AI Job Log | Tracks AI generation job state (Queued → Running → Completed / Failed) |
+| AI Job Log | AI generation job state: Queued → Running → Completed / Failed |
 
 ---
 
@@ -62,42 +121,17 @@ Then open Frappe Desk → CMS Settings and configure:
 
 ## Template syntax
 
-HTML templates use Jinja2 with dot-path notation:
+Jinja2 with dot-path notation:
 
 ```html
 <h1>{{ hero.headline }}</h1>
 <p>{{ hero.subheadline }}</p>
 
 {% for step in journey.steps %}
-<div class="step">{{ step.title }}</div>
+  <div class="step">{{ step.title }}</div>
 {% endfor %}
 
-<!-- Array index -->
-<li>{{ nav.links.0.label }}</li>
-```
-
----
-
-## Content workflow
-
-```
-New document → attach PDF/DOCX → "AI → Generate Content"
-  → Frappe extracts text → dispatches to agent service
-  → Agent runs AI → webhooks step/completed/failed back
-  → Review content_json → "View → Preview"
-  → Workflow: Draft → Review → Approved → Published
-  → Deploy hook fires → Astro rebuild → live
-```
-
-## Translation workflow
-
-```
-Published CMS Page → "AI → Translate" → select language
-  → Frappe enqueues translation job
-  → DeepL/Google translates content_json string values
-  → Creates CMS Translation record (workflow_state = Draft)
-  → Editor reviews → "Publish"
-  → Next Astro build picks up translated content via ?lang=pt-br
+<li>{{ nav.links.0.label }}</li>  <!-- array by index -->
 ```
 
 ---
@@ -106,235 +140,66 @@ Published CMS Page → "AI → Translate" → select language
 
 Base: `https://<frappe-site>/api/method/paideia_cms.api.v1`
 
-### Public endpoints — no auth (`allow_guest=True`)
+### Public — no auth (`allow_guest=True`)
 
-Called by Astro frontend at build time.
-
-#### Published page registry
+Called by the Astro frontend at build time.
 
 ```
 GET /registry.get_published_pages
-```
+    → [{ slug, content_type, title, institution?, study_level? }]
 
-Response:
-```json
-{
-  "message": {
-    "success": true,
-    "data": [
-      { "title": "Home", "slug": "home", "content_type": "CMS Page" },
-      { "title": "Visa Guide", "slug": "uk-student-visa-guide", "content_type": "CMS Blog" },
-      { "title": "MSc AI", "slug": "uws/postgraduate/ai", "content_type": "CMS Course", "institution": "uws", "study_level": "postgraduate" }
-    ]
-  }
-}
-```
-
-#### Get a CMS Page (JSON for SEO head)
-
-```
 GET /pages.get_page?slug=home&lang=en
-```
+    → { title, slug, astro_component, content, seo: { meta_title, meta_description, og_image, canonical_url } }
 
-Response:
-```json
-{
-  "message": {
-    "success": true,
-    "data": {
-      "title": "Home",
-      "slug": "home",
-      "template": "TMPL-0001",
-      "astro_component": "LandingPage",
-      "content": { "hero": { "headline": "Study in the UK" } },
-      "seo": {
-        "meta_title": "Paideia — Study Abroad",
-        "meta_description": "...",
-        "og_title": "...",
-        "og_description": "...",
-        "og_image": "https://...",
-        "canonical_url": "https://paideia.global/en/home"
-      },
-      "published_at": "2025-06-01 10:00:00"
-    }
-  }
-}
-```
-
-#### Get rendered HTML for a CMS Page (landing page body)
-
-```
 GET /preview.render_page_content?slug=home&lang=en
-```
+    → text/html  (Jinja2-rendered template, falls back to English if no translation)
 
-Response: `text/html` — Jinja2-rendered template with content injected. Frappe checks for a Published CMS Translation for that lang and falls back to English if none exists.
+GET /blogs.get_blog?slug=visa-guide&lang=en
+    → { name, title, slug, content_json, creation, seo_title, seo_description }
 
-#### Get a CMS Blog
-
-```
-GET /blogs.get_blog?slug=uk-student-visa-guide&lang=en
-```
-
-Response:
-```json
-{
-  "message": {
-    "success": true,
-    "data": {
-      "name": "BLOG-0001",
-      "title": "UK Student Visa Guide",
-      "slug": "uk-student-visa-guide",
-      "content_json": { "meta": { "author": "Paideia Team" }, "body": "..." },
-      "creation": "2025-05-15 08:30:00",
-      "seo_title": "...",
-      "seo_description": "..."
-    }
-  }
-}
-```
-
-#### List all published blogs
-
-```
 GET /blogs.get_blogs
-```
+    → [CmsBlog]
 
-Response: `{ "message": { "success": true, "data": [ ... ] } }`
+GET /courses.get_course?slug=uws/postgraduate/ai&lang=en
+    → { name, title, slug, institution, study_level, content_json, seo_title, seo_description }
 
-#### Get a CMS Course
-
-```
-GET /courses.get_course?slug=uws/postgraduate/artificial-intelligence&lang=en
-```
-
-Response:
-```json
-{
-  "message": {
-    "success": true,
-    "data": {
-      "name": "COURSE-0001",
-      "title": "MSc Artificial Intelligence",
-      "slug": "uws/postgraduate/artificial-intelligence",
-      "institution": "uws",
-      "study_level": "postgraduate",
-      "content_json": { "hero": {...}, "about": {...}, "modules": [...], "fees": {...} },
-      "seo_title": "...",
-      "seo_description": "..."
-    }
-  }
-}
-```
-
-#### URL redirects
-
-```
 GET /redirects.get_redirects
+    → [{ source, destination, permanent }]
+
+GET /preview.render_blog_content?slug=visa-guide&lang=en
+    → text/html
 ```
 
-Response: `{ "message": { "success": true, "data": [ { "source": "/old-path", "destination": "/new-path", "permanent": true } ] } }`
-
-#### Rendered HTML for CMS Blog
+### Authenticated — `Authorization: token <api_key>:<api_secret>`
 
 ```
-GET /preview.render_blog_content?slug=uk-student-visa-guide&lang=en
+POST /admin.trigger_generation       { doctype, doc_name }
+     → { job_id, status: "queued" }
+
+GET  /admin.get_job_status?job_id=…
+     → { status, message }
+
+POST /admin.trigger_translation      { doctype, doc_name, language }
+     → { translation_name }
+
+POST /ingest.ingest_course           { institution, study_level, slug, title, content_json }
+POST /ingest.ingest_blog             { slug, title, content_json }
+
+GET  /preview.render_page?name=PAGE-0001
+GET  /preview.render_blog?name=BLOG-0001
+GET  /preview.render_course?name=COURSE-0001
+GET  /preview.render_translation?name=CMS-TRANS-0001
+     → text/html (requires CMS role)
 ```
 
-Response: `text/html`
-
----
-
-### Authenticated — API token required
-
-```
-Authorization: token <api_key>:<api_secret>
-```
-
-#### Trigger AI content generation
-
-```
-POST /admin.trigger_generation
-Content-Type: application/json
-
-{ "doctype": "CMS Page", "doc_name": "PAGE-0001" }
-```
-
-Response: `{ "message": { "success": true, "data": { "job_id": "uuid-...", "status": "queued" } } }`
-
-#### Check job status
-
-```
-GET /admin.get_job_status?job_id=uuid-...
-```
-
-Response: `{ "message": { "success": true, "data": { "status": "Completed", "message": "Content saved." } } }`
-
-#### Trigger translation
-
-```
-POST /admin.trigger_translation
-Content-Type: application/json
-
-{ "doctype": "CMS Page", "doc_name": "PAGE-0001", "language": "pt-br" }
-```
-
-Response: `{ "message": { "success": true, "data": { "translation_name": "CMS-TRANS-0001" } } }`
-
-#### Ingest a course (external push)
-
-```
-POST /ingest.ingest_course
-Content-Type: application/json
-
-{
-  "institution": "uws",
-  "study_level": "postgraduate",
-  "slug": "artificial-intelligence",
-  "title": "MSc Artificial Intelligence",
-  "content_json": { ... }
-}
-```
-
-Response: `{ "message": { "success": true, "data": { "name": "COURSE-0001" } } }`
-
-#### Editor preview (CMS roles required)
-
-```
-GET /preview.render_page?name=PAGE-0001
-GET /preview.render_blog?name=BLOG-0001
-GET /preview.render_course?name=COURSE-0001
-GET /preview.render_translation?name=CMS-TRANS-0001
-```
-
-All return `text/html`.
-
----
-
-### Internal — agent service only
-
-#### Agent job callback
+### Internal — agent service only (`X-Agent-Secret` header)
 
 ```
 POST /agent_callback.receive
-X-Agent-Secret: <shared-secret>
-Content-Type: application/json
 
-// Step update:
-{ "job_id": "uuid", "status": "step", "message": "Calling OpenAI...", "context": { "doctype": "CMS Page", "doc_name": "PAGE-0001" } }
+  Step:      { job_id, status: "step",      message, context: { doctype, doc_name } }
+  Completed: { job_id, status: "completed", content_json, metadata, context }
+  Failed:    { job_id, status: "failed",    error, context }
 
-// Completed:
-{ "job_id": "uuid", "status": "completed", "content_json": {...}, "metadata": { "tokens_used": 1200, "model": "gpt-4o", "provider": "openai" }, "context": {...} }
-
-// Failed:
-{ "job_id": "uuid", "status": "failed", "error": "Rate limit exceeded.", "context": {...} }
+  → { ok: true }
 ```
-
-Response: `{ "ok": true }`
-
----
-
-## Standing rules
-
-- All Python code lives inside `paideia_cms/` — never at repo root
-- No AI logic or provider keys in Frappe — all AI runs in the agent service
-- Always update `ARCHITECTURE.md` when system flow, API endpoints, or doctypes change

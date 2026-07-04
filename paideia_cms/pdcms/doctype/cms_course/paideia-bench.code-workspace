@@ -5,6 +5,12 @@
 		},
 		{
 			"path": "../../../../../../../../Downloads/paideia-frontend-main"
+		},
+		{
+			"path": "../../../../../../../paideia-agents"
+		},
+		{
+			"path": "../../../../../../../paideia-cms-fe"
 		}
 	],
 	"settings": {}
